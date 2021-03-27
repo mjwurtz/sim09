@@ -51,6 +51,7 @@ static void acia_run_pty();
 static void acia_run_midi();
 
 void (*acia_run)() = NULL;
+struct Acia acia;
 
 static int midi_init() {
 	int i;

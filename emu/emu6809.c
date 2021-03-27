@@ -27,6 +27,8 @@ tt_u16 rpc, rx, ry, ru, rs;
 tt_u8 ra, rb, rdp;
 
 int ccc, ccv, ccz, ccn, cci, cch, ccf, cce;
+tt_u32 ccvx, ccvy, ccvz;
+int ccvr, ccv8;
 
 tt_u16 *regp[] = { &rx, &ry, &ru, &rs };
 

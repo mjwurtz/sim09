@@ -32,11 +32,11 @@
 
 int acia_init(int device);
 void acia_destroy();
-void (*acia_run)();
+extern void (*acia_run)();
 uint8_t acia_rreg(int reg);
 void acia_wreg(int reg, uint8_t val);
 
-struct {
+extern struct Acia {
 	uint8_t cr;
 	uint8_t sr;
 	uint8_t tdr;
