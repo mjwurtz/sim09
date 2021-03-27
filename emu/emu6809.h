@@ -39,6 +39,9 @@ extern int pchistnbr;
 #define ERR_INVALID_POSTBYTE -2
 #define ERR_INVALID_ADDRMODE -3
 #define ERR_INVALID_EXGR -4
+#define ERR_NO_MEMORY -5
+#define ERR_WRITE_PROTECTED -6
+#define ERR_NO_DEVICE -7
 
 #define SYSTEM_CALL -100
 

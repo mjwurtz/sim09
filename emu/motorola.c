@@ -32,9 +32,9 @@ int load_motos1(char *filename)
   unsigned char value;
   FILE *fi;
 	
-  printf("loading %s\n", filename);
+  printf("loading %s ... ", filename);
   fi=fopen(filename,"r");
-  if(fi==NULL)
+  if (fi==NULL)
   {
     printf("can't open it, sorry.\n");
     return(0);
@@ -68,6 +68,7 @@ int load_motos1(char *filename)
     if(feof(fi))done=1;
   }
   fclose(fi);
+  printf( "done.\n");
   return(1);
 }
 

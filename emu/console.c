@@ -29,6 +29,17 @@
 
 #include "../hardware/acia.h"
 
+static char *errmsg[] = {
+  "",
+  "Invalid Op code",
+  "Invalid post byte(s)",
+  "Invalid address mode",
+  "Invalid exgr",
+  "Off limit memory address",
+  "Attempt to write read only memory",
+  "No peripheral at this address"
+};
+
 long cycles = 0;
 
 static int activate_console = 0;
@@ -128,13 +139,12 @@ void execute_addr(tt_u16 addr)
   while (!activate_console && rpc != addr) {
     while ((n = m6809_execute()) > 0 && !activate_console && rpc != addr) {
       cycles += n;
-
       acia_run();
     }
     if (n == SYSTEM_CALL)
       activate_console = m6809_system();
     else if (n < 0) {
-      printf("m6809 run time error, return code %d\n", n);
+      printf("m6809 run time error : %s\n", errmsg[-n]);
       activate_console = 1;
     }
   }
@@ -278,12 +288,14 @@ void console_command()
       break;
     case 'h' : case '?' :
       printf("     HELP for the 6809 simulator debugger\n\n");
+      printf("   b file [start]  : load raw binary <file> at address <start>\n");
       printf("   c               : clear memory\n");
       printf("   d [start] [end] : disassemble memory from <start> to <end>\n");
       printf("   f adr           : step forward until PC = <adr>\n");
       printf("   g [adr]         : start execution at current address or <adr>\n");
       printf("   h, ?            : show this help page\n");
-      printf("   l file          : load Intel Hex binary <file>\n");
+      printf("   i file          : load Intel Hex binary <file>\n");
+      printf("   l file(s)       : load Motororal s19 binary <file>\n");
       printf("   m [start] [end] : dump memory from <start> to <end>\n");
       printf("   n [n]           : next [n] instruction(s)\n");
       printf("   p adr           : set PC to <adr>\n");
@@ -296,12 +308,27 @@ void console_command()
       printf("   u               : toggle dump registers\n");
       printf("   y [0]           : show number of 6809 cycles [or set it to 0]\n");
       break;
+    case 'i' :
+      if (more_params(&strptr))
+		load_intelhex(readstr(&strptr));
+      else
+		printf("Syntax Error. Type 'h' to show help.\n");
+      break;
     case 'l' :
       if (more_params(&strptr))
-	// removeme load_intelhex(readstr(&strptr));
 	load_motos1(readstr(&strptr));
       else
 	printf("Syntax Error. Type 'h' to show help.\n");
+      break;
+    case 'b' :
+      if (more_params(&strptr)) {
+		char *fname = readstr(&strptr);
+        if (more_params(&strptr))
+		  load_raw(fname, readstr(&strptr));
+		else
+		  load_raw(fname, "0");
+      } else
+		printf("Syntax Error. Type 'h' to show help.\n");
       break;
     case 'm' :
       if (more_params(&strptr)) {

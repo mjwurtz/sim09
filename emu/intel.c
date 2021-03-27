@@ -94,10 +94,11 @@ void load_intelhex(char *filename)
   FILE *fp;
   int end = 0;
 
+  printf("loading %s ... ", filename);
   fp = fopen(filename, "r");
 
   if (!fp) {
-    printf("Could not open file %s\n", filename);
+    printf("can't open it, sorry.\n");
     return;
   }
 
