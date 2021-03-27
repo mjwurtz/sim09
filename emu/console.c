@@ -397,16 +397,45 @@ void console_command()
   }
 }
 
+void usage( char *cmd) {
+    printf("Usage: %s [-h] => this help\n", cmd);
+    printf("       %s -b <file> [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
+    printf("       %s -m [<file> [...]] => load 0..n motorola .s19 file(s)\n", cmd);
+    printf("       %s -i [<file> [...]] => load 0..n intel .hex file(s)\n", cmd);
+    printf("       %s -s <file> => load/assemble source file\n", cmd);
+    exit(0);
+}
+
 void parse_cmdline(int argc, char **argv)
 {
-  if (--argc == 0)
-    return;
-  if (!strcmp(argv[1], "-h")) {
-    printf("%s: [file [...]]\n", argv[0]);
-    exit(0);
+  char *cmd = argv[0];
+  char *param = *++argv;
+  if (--argc == 0 || param[0] != '-')
+	usage( cmd);
+
+  argc--;
+  switch (param[1]) {
+	case 'i' :
+  	  while (argc-- > 0)
+    	load_intelhex(*++argv);
+	  break;
+	case 'm' :
+  	  while (argc-- > 0)
+    	load_motos1(*++argv);
+	  break;
+	case 'b' :
+	  if (argc == 2)
+		load_raw( argv[1], argv[2]);
+	  else
+		load_raw( argv[1], "0");
+	  break;
+	case 'h' :
+	  usage( cmd);
+	  break;
+	default :
+	  printf( "Invalid parameter !\n");
+	  usage( cmd);
   }
-  while (argc-- > 0)
-    load_motos1(*++argv);
 }
 
 int main(int argc, char **argv)

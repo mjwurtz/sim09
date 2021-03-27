@@ -105,7 +105,8 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am_sim6809_OBJECTS = console.$(OBJEXT) dis6809.$(OBJEXT) \
 	emu6809.$(OBJEXT) inst6809.$(OBJEXT) int6809.$(OBJEXT) \
 	memory.$(OBJEXT) misc.$(OBJEXT) miscutils.$(OBJEXT) \
-	intel.$(OBJEXT) motorola.$(OBJEXT) ../hardware/acia.$(OBJEXT)
+	intel.$(OBJEXT) motorola.$(OBJEXT) raw.$(OBJEXT) \
+	../hardware/acia.$(OBJEXT)
 sim6809_OBJECTS = $(am_sim6809_OBJECTS)
 am__DEPENDENCIES_1 =
 sim6809_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -129,7 +130,8 @@ am__depfiles_remade = ../hardware/$(DEPDIR)/acia.Po \
 	./$(DEPDIR)/emu6809.Po ./$(DEPDIR)/inst6809.Po \
 	./$(DEPDIR)/int6809.Po ./$(DEPDIR)/intel.Po \
 	./$(DEPDIR)/memory.Po ./$(DEPDIR)/misc.Po \
-	./$(DEPDIR)/miscutils.Po ./$(DEPDIR)/motorola.Po
+	./$(DEPDIR)/miscutils.Po ./$(DEPDIR)/motorola.Po \
+	./$(DEPDIR)/raw.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -271,7 +273,7 @@ top_builddir = ..
 top_srcdir = ..
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 sim6809_LDADD = $(ALSA_LIBS) $(UTIL_LIBS)
-sim6809_SOURCES = console.c dis6809.c emu6809.c inst6809.c int6809.c memory.c misc.c miscutils.c intel.c motorola.c ../hardware/acia.c
+sim6809_SOURCES = console.c dis6809.c emu6809.c inst6809.c int6809.c memory.c misc.c miscutils.c intel.c motorola.c raw.c ../hardware/acia.c
 all: all-am
 
 .SUFFIXES:
@@ -378,6 +380,7 @@ include ./$(DEPDIR)/memory.Po # am--include-marker
 include ./$(DEPDIR)/misc.Po # am--include-marker
 include ./$(DEPDIR)/miscutils.Po # am--include-marker
 include ./$(DEPDIR)/motorola.Po # am--include-marker
+include ./$(DEPDIR)/raw.Po # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -541,6 +544,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/misc.Po
 	-rm -f ./$(DEPDIR)/miscutils.Po
 	-rm -f ./$(DEPDIR)/motorola.Po
+	-rm -f ./$(DEPDIR)/raw.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -597,6 +601,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/misc.Po
 	-rm -f ./$(DEPDIR)/miscutils.Po
 	-rm -f ./$(DEPDIR)/motorola.Po
+	-rm -f ./$(DEPDIR)/raw.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

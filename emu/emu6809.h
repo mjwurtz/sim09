@@ -246,3 +246,6 @@ void *mmalloc(size_t n);
 
 /* intel.c */
 void load_intelhex(char *filename);
+
+/* raw.c */
+void load_raw( char *filename, char *pos);
