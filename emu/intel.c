@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "emu6809.h"
+#include "../hardware/hardware.h"
 
 #define READC (*(*ptr)++)
 #define GETB (xdigitconv(READC) * 16 + xdigitconv(READC))
@@ -102,8 +103,9 @@ void load_intelhex(char *filename)
     return;
   }
 
+  loading = 1;
   while (fgets(linebuf, 80, fp) != NULL && !end)
     end = read_line();
-
+  loading = 0;
 }
 

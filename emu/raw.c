@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include "emu6809.h"
+#include "../hardware/hardware.h"
 
 void load_raw( char *filename, char *pos)
 {
@@ -58,6 +59,7 @@ void load_raw( char *filename, char *pos)
 
 // reading and processing file...
   
+  loading = 1;
   fseek( fi, 0L, SEEK_SET);
   for (addr = bin_pos; addr < bin_pos + bin_len; addr++) {
 	c =  fgetc(fi);
@@ -65,6 +67,7 @@ void load_raw( char *filename, char *pos)
     
   }
 
+  loading = 0;
   printf( "0x%04X bytes loaded at Ox%04X.\n", bin_len, bin_pos);
   fclose(fi);
 }

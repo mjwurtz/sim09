@@ -22,6 +22,7 @@
 #include "motorola.h"
 #include "config.h"
 #include "emu6809.h"
+#include "../hardware/hardware.h"
 
 int load_motos1(char *filename)
 {
@@ -40,6 +41,7 @@ int load_motos1(char *filename)
     return(0);
   }
   
+  loading = 1;
   r = fgets(buf,200,fi);
   while(!done)
   {
@@ -67,6 +69,7 @@ int load_motos1(char *filename)
     r = fgets(buf,200,fi);
     if(feof(fi))done=1;
   }
+  loading = 0;
   fclose(fi);
   printf( "done.\n");
   return(1);

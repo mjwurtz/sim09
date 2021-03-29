@@ -106,7 +106,7 @@ am_sim6809_OBJECTS = console.$(OBJEXT) dis6809.$(OBJEXT) \
 	emu6809.$(OBJEXT) inst6809.$(OBJEXT) int6809.$(OBJEXT) \
 	memory.$(OBJEXT) misc.$(OBJEXT) miscutils.$(OBJEXT) \
 	intel.$(OBJEXT) motorola.$(OBJEXT) raw.$(OBJEXT) \
-	../hardware/acia.$(OBJEXT)
+	../hardware/hardware.$(OBJEXT) ../hardware/acia.$(OBJEXT)
 sim6809_OBJECTS = $(am_sim6809_OBJECTS)
 am__DEPENDENCIES_1 =
 sim6809_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -126,10 +126,10 @@ DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ../hardware/$(DEPDIR)/acia.Po \
-	./$(DEPDIR)/console.Po ./$(DEPDIR)/dis6809.Po \
-	./$(DEPDIR)/emu6809.Po ./$(DEPDIR)/inst6809.Po \
-	./$(DEPDIR)/int6809.Po ./$(DEPDIR)/intel.Po \
-	./$(DEPDIR)/memory.Po ./$(DEPDIR)/misc.Po \
+	../hardware/$(DEPDIR)/hardware.Po ./$(DEPDIR)/console.Po \
+	./$(DEPDIR)/dis6809.Po ./$(DEPDIR)/emu6809.Po \
+	./$(DEPDIR)/inst6809.Po ./$(DEPDIR)/int6809.Po \
+	./$(DEPDIR)/intel.Po ./$(DEPDIR)/memory.Po ./$(DEPDIR)/misc.Po \
 	./$(DEPDIR)/miscutils.Po ./$(DEPDIR)/motorola.Po \
 	./$(DEPDIR)/raw.Po
 am__mv = mv -f
@@ -273,7 +273,7 @@ top_builddir = ..
 top_srcdir = ..
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 sim6809_LDADD = $(ALSA_LIBS) $(UTIL_LIBS)
-sim6809_SOURCES = console.c dis6809.c emu6809.c inst6809.c int6809.c memory.c misc.c miscutils.c intel.c motorola.c raw.c ../hardware/acia.c
+sim6809_SOURCES = console.c dis6809.c emu6809.c inst6809.c int6809.c memory.c misc.c miscutils.c intel.c motorola.c raw.c ../hardware/hardware.c ../hardware/acia.c
 all: all-am
 
 .SUFFIXES:
@@ -355,6 +355,8 @@ clean-binPROGRAMS:
 ../hardware/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ../hardware/$(DEPDIR)
 	@: > ../hardware/$(DEPDIR)/$(am__dirstamp)
+../hardware/hardware.$(OBJEXT): ../hardware/$(am__dirstamp) \
+	../hardware/$(DEPDIR)/$(am__dirstamp)
 ../hardware/acia.$(OBJEXT): ../hardware/$(am__dirstamp) \
 	../hardware/$(DEPDIR)/$(am__dirstamp)
 
@@ -370,6 +372,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include ../hardware/$(DEPDIR)/acia.Po # am--include-marker
+include ../hardware/$(DEPDIR)/hardware.Po # am--include-marker
 include ./$(DEPDIR)/console.Po # am--include-marker
 include ./$(DEPDIR)/dis6809.Po # am--include-marker
 include ./$(DEPDIR)/emu6809.Po # am--include-marker
@@ -534,6 +537,7 @@ clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ../hardware/$(DEPDIR)/acia.Po
+	-rm -f ../hardware/$(DEPDIR)/hardware.Po
 	-rm -f ./$(DEPDIR)/console.Po
 	-rm -f ./$(DEPDIR)/dis6809.Po
 	-rm -f ./$(DEPDIR)/emu6809.Po
@@ -591,6 +595,7 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ../hardware/$(DEPDIR)/acia.Po
+	-rm -f ../hardware/$(DEPDIR)/hardware.Po
 	-rm -f ./$(DEPDIR)/console.Po
 	-rm -f ./$(DEPDIR)/dis6809.Po
 	-rm -f ./$(DEPDIR)/emu6809.Po

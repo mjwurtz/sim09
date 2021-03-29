@@ -18,6 +18,8 @@
 /* 
  * You MUST define theses data types
  */
+#include <unistd.h>
+#include <stdint.h>
 
 /*
  * Define here your 8 bits types
@@ -32,13 +34,6 @@ typedef signed char tt_s8;
  */
 typedef unsigned short tt_u16;
 typedef signed short tt_s16;
-
-/*
- * Define here your 32 bits types
- *
- */
-typedef unsigned long tt_u32;
-typedef signed long tt_s32;
 
 /*
  * define to keep a PC history in debugger

@@ -71,8 +71,8 @@ void addb()
 
 void addd()
 {
-  tt_u32 v = (tt_u32)FETCHW;
-  tt_u32 r, d = GETRD;
+  uint32_t v = (uint32_t)FETCHW;
+  uint32_t r, d = GETRD;
 
   r = d + v;
   SET_NZVC16(d,v,r);
@@ -223,8 +223,8 @@ void cmpb()
 
 #define cmp16(reg) \
 { \
-  tt_u32 v = (tt_u32)FETCHW; \
-  tt_u32 r, d = (tt_u32)reg; \
+  uint32_t v = (uint32_t)FETCHW; \
+  uint32_t r, d = (uint32_t)reg; \
  \
   r = d - v; \
   SET_NZVC16(d,v,r); \
@@ -777,8 +777,8 @@ void subb()
 
 void subd()
 {
-  tt_u32 v = (tt_u32)FETCHW;
-  tt_u32 r, d = GETRD;
+  uint32_t v = (uint32_t)FETCHW;
+  uint32_t r, d = GETRD;
 
   r = d - v;
   SET_NZVC16(d,v,r);

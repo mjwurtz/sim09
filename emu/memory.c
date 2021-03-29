@@ -23,6 +23,7 @@
 #include "emu6809.h"
 #include "console.h"
 
+#include "../hardware/hardware.h"
 #include "../hardware/acia.h"
 
 tt_u8 *ramdata;    /* 64 kb of ram */
@@ -37,7 +38,14 @@ int memory_init(void)
 tt_u8 get_memb(tt_u16 adr)
 {
   // not hardware
-  if ((adr & 0xf000) != 0xe000) return ramdata[adr];
+  if (adr < io_low || adr >= io_high) {
+    if (adr < mem_low || (adr >= mem_high && adr < rom) || adr > 0xFFFF) {
+      printf( "read %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
+      err6809 = ERR_NO_MEMORY;
+      return (0);
+    }
+    return ramdata[adr];
+  }
 
   // hardware mapper
   switch (adr & 0xff00) {
@@ -56,12 +64,31 @@ tt_u16 get_memw(tt_u16 adr)
 
 void set_memb(tt_u16 adr, tt_u8 val)
 {
-    // RAM or ROM map
-    if ((adr & 0xf000) != 0xe000) { // device map
-      ramdata[adr] = val;
-      return;
-    }
+// Protecting some memory space
+  if (loading) {
+    ramdata[adr] = val;
+	return;
+  }
+  if (adr >= rom) {
+      printf( "write %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
+      err6809 = ERR_WRITE_PROTECTED;
+    return;
+  }
 
+// managing memory available on simulated hardware
+  if (adr < mem_low || adr >= mem_high) {
+    printf( "write %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
+    err6809 = ERR_NO_MEMORY;
+    return;
+  }
+
+// not inside io space ?
+  if (adr < io_low || adr >= io_high) {
+    ramdata[adr] = val;
+    return;
+  }
+
+// @TODO : gestion dynamique des adaptateurs
     switch (adr & 0xff00) {
       case 0xe100:	// ACIA
         acia_wreg(adr & 0xff, val);

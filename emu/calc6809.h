@@ -20,7 +20,7 @@ extern int ccc, ccv, ccz, ccn, cci, cch, ccf, cce;
 /* help to compute V bit */
 
 #ifdef BIT_V_DELAYED
-extern tt_u32 ccvx, ccvy, ccvz;
+extern uint32_t ccvx, ccvy, ccvz;
 extern int ccvr, ccv8;
 
 #define GET_V if (!ccvr) {ccvr=1; if (ccv8) { GET_V8;} else { GET_V16;}}

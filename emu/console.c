@@ -27,6 +27,7 @@
 #include "motorola.h"
 #include "console.h"
 
+#include "../hardware/hardware.h"
 #include "../hardware/acia.h"
 
 static char *errmsg[] = {
@@ -35,7 +36,7 @@ static char *errmsg[] = {
   "Invalid post byte(s)",
   "Invalid address mode",
   "Invalid exgr",
-  "Off limit memory address",
+  "Outside memory limits",
   "Attempt to write read only memory",
   "No peripheral at this address"
 };
@@ -48,7 +49,7 @@ static int console_active = 0;
 static void sigbrkhandler(int sigtype)
 {
   if (!console_active)
-    activate_console = 1;
+	activate_console = 1;
 }
 
 static void setup_brkhandler(void)
@@ -69,39 +70,39 @@ int m6809_system(void)
 
   switch (ra) {
   case 0 :
-    printf("Program terminated\n");
-    rti();
-    return 1;
+	printf("Program terminated\n");
+	rti();
+	return 1;
   case 1 :
-    while ((c = get_memb(rx++)))
-      putchar(c);
-    rti();
-    return 0;
+	while ((c = get_memb(rx++)))
+	  putchar(c);
+	rti();
+	return 0;
   case 2 :
-    ra = 0;
-    if (rb) {
-      fflush(stdout);
-      if (fgets(input, rb, stdin)) {
+	ra = 0;
+	if (rb) {
+	  fflush(stdout);
+	  if (fgets(input, rb, stdin)) {
 	do {
 	  set_memb(rx++, *p);
 	  ra++;
 	} while (*p++);
 	ra--;
-      } else
+	  } else
 	set_memb(rx, 0);
-    }
-    set_memb(rs + 1, ra);
-    rti();
-    return 0;
+	}
+	set_memb(rs + 1, ra);
+	rti();
+	return 0;
   case 3: 	// print character in B
-    putchar(rb);
-    rti();
-    return 0;
+	putchar(rb);
+	rti();
+	return 0;
 
   default :
-    printf("Unknown system call %d\n", ra);
-    rti();
-    return 0;
+	printf("Unknown system call %d\n", ra);
+	rti();
+	return 0;
   }
 }
 
@@ -111,22 +112,22 @@ int execute()
   int r = 0;
 
   do {
-    while ((n = m6809_execute()) > 0 && !activate_console) {
-      cycles += n;
-      (*acia_run)();
+	while ((n = m6809_execute()) > 0 && !activate_console) {
+	  cycles += n;
+	  (*acia_run)();
 
-    }
-    if (activate_console && n > 0)
-      cycles += n;
-    
-    if (n == SYSTEM_CALL) {
-      r = m6809_system();
-      if (r == 1) activate_console = 1;
-    }
-    else if (n < 0) {
-      printf("m6809 run time error, return code %d\n", n);
-      activate_console = r = 1;
-    }
+	}
+	if (activate_console && n > 0)
+	  cycles += n;
+	
+	if (n == SYSTEM_CALL) {
+	  r = m6809_system();
+	  if (r == 1) activate_console = 1;
+	}
+	else if (n < 0) {
+	  printf("m6809 run time error : %s\n", errmsg[-n]);
+	  activate_console = r = 1;
+	}
   } while (!activate_console);
 
   return r;
@@ -137,23 +138,23 @@ void execute_addr(tt_u16 addr)
   int n;
 
   while (!activate_console && rpc != addr) {
-    while ((n = m6809_execute()) > 0 && !activate_console && rpc != addr) {
-      cycles += n;
-      acia_run();
-    }
-    if (n == SYSTEM_CALL)
-      activate_console = m6809_system();
-    else if (n < 0) {
-      printf("m6809 run time error : %s\n", errmsg[-n]);
-      activate_console = 1;
-    }
+	while ((n = m6809_execute()) > 0 && !activate_console && rpc != addr) {
+	  cycles += n;
+	  acia_run();
+	}
+	if (n == SYSTEM_CALL)
+	  activate_console = m6809_system();
+	else if (n < 0) {
+	  printf("m6809 run time error : %s\n", errmsg[-n]);
+	  activate_console = 1;
+	}
   }
 }
 
 void ignore_ws(char **c)
 {
   while (**c && isspace(**c))
-    (*c)++;
+	(*c)++;
 }
 
 tt_u16 readhex(char **c)
@@ -164,14 +165,14 @@ tt_u16 readhex(char **c)
   ignore_ws(c);
 
   while (isxdigit(nc = **c)){
-    (*c)++;
-    val *= 16;
-    nc = toupper(nc);
-    if (isdigit(nc)) {
-      val += nc - '0';
-    } else {
-      val += nc - 'A' + 10;
-    }
+	(*c)++;
+	val *= 16;
+	nc = toupper(nc);
+	if (isdigit(nc)) {
+	  val += nc - '0';
+	} else {
+	  val += nc - 'A' + 10;
+	}
   }
   
   return val;
@@ -185,9 +186,9 @@ int readint(char **c)
   ignore_ws(c);
 
   while (isdigit(nc = **c)){
-    (*c)++;
-    val *= 10;
-    val += nc - '0';
+	(*c)++;
+	val *= 10;
+	val += nc - '0';
   }
   
   return val;
@@ -201,7 +202,7 @@ char *readstr(char **c)
   ignore_ws(c);
 
   while (!isspace(**c) && **c && i < 255)
-    buffer[i++] = *(*c)++;
+	buffer[i++] = *(*c)++;
 
   buffer[i] = '\0';
 
@@ -230,207 +231,207 @@ void console_command()
   int regon = 0;
 
   for(;;) {
-    activate_console = 0;
-    console_active = 1;
-    printf("> ");
-    fflush(stdout);
-    if(fgets(input, 80, stdin) == 0)
-      return;
-    if (strlen(input) == 1)
-      strptr = copy;
-    else
-      strptr = strcpy(copy, input);
-    
-    switch (next_char(&strptr)) {
-    case 'c' :
-      for (n = 0; n < 0x10000; n++)
-	set_memb((tt_u16)n, 0);
-      printf("Memory cleared\n");
-      break;
-    case 'd' :
-      if (more_params(&strptr)) {
-	start = readhex(&strptr);
-	if (more_params(&strptr))
-	  end = readhex(&strptr);
+	activate_console = 0;
+	console_active = 1;
+	printf("> ");
+	fflush(stdout);
+	if(fgets(input, 80, stdin) == 0)
+	  return;
+	if (strlen(input) == 1)
+	  strptr = copy;
 	else
-	  end = start;
-      } else 
-	start = end = memadr;
-      
-      for(n = start; n <= end && n < 0x10000; n += dis6809((tt_u16)n, stdout));
+	  strptr = strcpy(copy, input);
+	
+	switch (next_char(&strptr)) {
+	case 'c' :
+	  for (n = 0; n < 0x10000; n++)
+	set_memb((tt_u16)n, 0);
+	  printf("Memory cleared\n");
+	  break;
+	case 'd' :
+	  if (more_params(&strptr)) {
+		start = readhex(&strptr);
+	  if (more_params(&strptr))
+		end = readhex(&strptr);
+	  else
+		end = start;
+	  } else 
+		start = end = memadr;
+	  
+	  for(n = start; n <= end && n < 0x10000; n += dis6809((tt_u16)n, stdout));
 
-      memadr = (tt_u16)n;
-      break;
-    case 'f' :
-      if (more_params(&strptr)) {
-	console_active = 0;
-	execute_addr(readhex(&strptr));
-	if (regon) {
-	  m6809_dumpregs();
-	  printf("Next PC: ");
-	  dis6809(rpc, stdout);
-	}
-	memadr = rpc;
-      } else
-	printf("Syntax Error. Type 'h' to show help.\n");
-      break;
-    case 'g' :
-      if (more_params(&strptr))
-	rpc = readhex(&strptr);
-      console_active = 0;
-      execute();
-      if (regon) {
-	m6809_dumpregs();
-	printf("Next PC: ");
-	dis6809(rpc, stdout);
-      }
-      memadr = rpc;
-      break;
-    case 'h' : case '?' :
-      printf("     HELP for the 6809 simulator debugger\n\n");
-      printf("   b file [start]  : load raw binary <file> at address <start>\n");
-      printf("   c               : clear memory\n");
-      printf("   d [start] [end] : disassemble memory from <start> to <end>\n");
-      printf("   f adr           : step forward until PC = <adr>\n");
-      printf("   g [adr]         : start execution at current address or <adr>\n");
-      printf("   h, ?            : show this help page\n");
-      printf("   i file          : load Intel Hex binary <file>\n");
-      printf("   l file(s)       : load Motororal s19 binary <file>\n");
-      printf("   m [start] [end] : dump memory from <start> to <end>\n");
-      printf("   n [n]           : next [n] instruction(s)\n");
-      printf("   p adr           : set PC to <adr>\n");
-      printf("   q               : quit the emulator\n");
-      printf("   r               : dump CPU registers\n");
-#ifdef PC_HISTORY
-      printf("   s               : show PC history\n");
-      printf("   t               : flush PC history\n");
-#endif
-      printf("   u               : toggle dump registers\n");
-      printf("   y [0]           : show number of 6809 cycles [or set it to 0]\n");
-      break;
-    case 'i' :
-      if (more_params(&strptr))
-		load_intelhex(readstr(&strptr));
-      else
+	  memadr = (tt_u16)n;
+	  break;
+	case 'f' :
+	  if (more_params(&strptr)) {
+		console_active = 0;
+		execute_addr(readhex(&strptr));
+		if (regon) {
+		  m6809_dumpregs();
+		  printf("Next PC: ");
+		  dis6809(rpc, stdout);
+		}
+		memadr = rpc;
+	  } else
 		printf("Syntax Error. Type 'h' to show help.\n");
-      break;
-    case 'l' :
-      if (more_params(&strptr))
-	load_motos1(readstr(&strptr));
-      else
-	printf("Syntax Error. Type 'h' to show help.\n");
-      break;
-    case 'b' :
-      if (more_params(&strptr)) {
+		break;
+	case 'g' :
+	  if (more_params(&strptr))
+		rpc = readhex(&strptr);
+		console_active = 0;
+		execute();
+		if (regon) {
+		  m6809_dumpregs();
+		  printf("Next PC: ");
+		  dis6809(rpc, stdout);
+		}
+	  memadr = rpc;
+	  break;
+	case 'h' : case '?' :
+	  printf("     HELP for the 6809 simulator debugger\n\n");
+	  printf("   b file [start]  : load raw binary <file> at address <start>\n");
+	  printf("   c               : clear memory\n");
+	  printf("   d [start] [end] : disassemble memory from <start> to <end>\n");
+	  printf("   f adr           : step forward until PC = <adr>\n");
+	  printf("   g [adr]         : start execution at current address or <adr>\n");
+	  printf("   h, ?            : show this help page\n");
+	  printf("   i file          : load Intel Hex binary <file>\n");
+	  printf("   l file(s)       : load Motororal s19 binary <file>\n");
+	  printf("   m [start] [end] : dump memory from <start> to <end>\n");
+	  printf("   n [n]           : next [n] instruction(s)\n");
+	  printf("   p adr           : set PC to <adr>\n");
+	  printf("   q               : quit the emulator\n");
+	  printf("   r               : dump CPU registers\n");
+#ifdef PC_HISTORY
+	  printf("   s               : show PC history\n");
+	  printf("   t               : flush PC history\n");
+#endif
+	  printf("   u               : toggle dump registers\n");
+	  printf("   y [0]           : show number of 6809 cycles [or set it to 0]\n");
+	  break;
+	case 'i' :
+	  if (more_params(&strptr))
+		load_intelhex(readstr(&strptr));
+	  else
+		printf("Syntax Error. Type 'h' to show help.\n");
+	  break;
+	case 'l' :
+	  if (more_params(&strptr))
+		load_motos1(readstr(&strptr));
+	  else
+		printf("Syntax Error. Type 'h' to show help.\n");
+	  break;
+	case 'b' :
+	  if (more_params(&strptr)) {
 		char *fname = readstr(&strptr);
-        if (more_params(&strptr))
+		if (more_params(&strptr))
 		  load_raw(fname, readstr(&strptr));
 		else
 		  load_raw(fname, "0");
-      } else
+	  } else
 		printf("Syntax Error. Type 'h' to show help.\n");
-      break;
-    case 'm' :
-      if (more_params(&strptr)) {
-	n = readhex(&strptr);
-	if (more_params(&strptr))
-	  end = readhex(&strptr);
-	else
-	  end = n;
-      } else 
-	n = end = memadr;
-      while (n <= (long)end) {
-	printf("%04hX: ", (unsigned int)n);
-	for (i = 1; i <= 8; i++)
-	  printf("%02X ", get_memb(n++));
-	n -= 8;
-	for (i = 1; i <= 8; i++) {
-	  tt_u8 v;
+	  break;
+	case 'm' :
+	  if (more_params(&strptr)) {
+		n = readhex(&strptr);
+		if (more_params(&strptr))
+		  end = readhex(&strptr);
+		else
+		end = n;
+	  } else 
+		n = end = memadr;
+		while (n <= (long)end) {
+		  printf("%04hX: ", (unsigned int)n);
+		  for (i = 1; i <= 16; i++)
+			printf("%02X ", get_memb(n++));
+		  n -= 16;
+		  for (i = 1; i <=16; i++) {
+		  tt_u8 v;
 
-	  v = get_memb(n++);
-	  if (v >= 0x20 && v <= 0x7e)
-	    putchar(v);
-	  else
-	    putchar('.');
+		  v = get_memb(n++);
+		  if (v >= 0x20 && v <= 0x7e)
+			putchar(v);
+		  else
+			putchar('.');
 	}
 	putchar('\n');
-      }
-      memadr = n;
-      break;
-    case 'n' :
-      if (more_params(&strptr))
+	  }
+	  memadr = n;
+	  break;
+	case 'n' :
+	  if (more_params(&strptr))
 	i = readint(&strptr);
-      else
+	  else
 	i = 1;
 
-      while (i-- > 0) {
+	  while (i-- > 0) {
 	activate_console = 1;
 	if (!execute()) {
 	  printf("Next PC: ");
 	  memadr = rpc + dis6809(rpc, stdout);
 	  if (regon)
-	    m6809_dumpregs();
+		m6809_dumpregs();
 	} else
 	  break;
-      }
-      break;
-    case 'p' :
-      if(more_params(&strptr))
+	  }
+	  break;
+	case 'p' :
+	  if(more_params(&strptr))
 	rpc = readhex(&strptr);
-      else
+	  else
 	printf("Syntax Error. Type 'h' to show help.\n");
-      break;
-    case 'q' :
-      return;
-    case 'r' :
-      m6809_dumpregs();
-      break;
+	  break;
+	case 'q' :
+	  return;
+	case 'r' :
+	  m6809_dumpregs();
+	  break;
 #ifdef PC_HISTORY
-    case 's' :
-      r = pchistidx - pchistnbr;
-      if (r < 0)
+	case 's' :
+	  r = pchistidx - pchistnbr;
+	  if (r < 0)
 	r += PC_HISTORY_SIZE;
-      for (i = 1; i <= pchistnbr; i++) {
+	  for (i = 1; i <= pchistnbr; i++) {
 	dis6809(pchist[r++], stdout);
 	if (r == PC_HISTORY_SIZE)
 	  r = 0;
-      }
-      break;
-    case 't' :
-      pchistnbr = pchistidx = 0;
-      break;
+	  }
+	  break;
+	case 't' :
+	  pchistnbr = pchistidx = 0;
+	  break;
 #endif
-    case 'u' :
-      regon ^= 1;
-      printf("Dump registers %s\n", regon ? "on" : "off");
-      break;
-    case 'y' :
-      if (more_params(&strptr))
+	case 'u' :
+	  regon ^= 1;
+	  printf("Dump registers %s\n", regon ? "on" : "off");
+	  break;
+	case 'y' :
+	  if (more_params(&strptr))
 	if(readint(&strptr) == 0) {
 	  cycles = 0;
 	  printf("Cycle counter initialized\n");
 	} else
 	  printf("Syntax Error. Type 'h' to show help.\n");
-      else {
+	  else {
 	double sec = (double)cycles / 1000000.0;
 
 	printf("Cycle counter: %ld\nEstimated time at 1 Mhz : %g seconds\n", cycles, sec);
-      }
-      break;
-    default :
-      printf("Undefined command. Type 'h' to show help.\n");
-      break;
-    }
+	  }
+	  break;
+	default :
+	  printf("Undefined command. Type 'h' to show help.\n");
+	  break;
+	}
   }
 }
 
 void usage( char *cmd) {
-    printf("Usage: %s [-h] => this help\n", cmd);
-    printf("       %s -b <file> [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
-    printf("       %s -m [<file> [...]] => load 0..n motorola .s19 file(s)\n", cmd);
-    printf("       %s -i [<file> [...]] => load 0..n intel .hex file(s)\n", cmd);
-    printf("       %s -s <file> => load/assemble source file\n", cmd);
-    exit(0);
+	printf("Usage: %s [-h] => this help\n", cmd);
+	printf("       %s -b <file> [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
+	printf("       %s -m [<file> [...]] => load 0..n motorola .s19 file(s)\n", cmd);
+	printf("       %s -i [<file> [...]] => load 0..n intel .hex file(s)\n", cmd);
+	printf("       %s -s <file> => load/assemble source file\n", cmd);
+	exit(0);
 }
 
 void parse_cmdline(int argc, char **argv)
@@ -444,11 +445,11 @@ void parse_cmdline(int argc, char **argv)
   switch (param[1]) {
 	case 'i' :
   	  while (argc-- > 0)
-    	load_intelhex(*++argv);
+		load_intelhex(*++argv);
 	  break;
 	case 'm' :
   	  while (argc-- > 0)
-    	load_motos1(*++argv);
+		load_motos1(*++argv);
 	  break;
 	case 'b' :
 	  if (argc == 2)
@@ -469,7 +470,8 @@ int main(int argc, char **argv)
 {
   if (!memory_init())
     return 1;
-  parse_cmdline(argc, argv);
+  parse_cmdline(argc, argv);	// load code from file
+  get_config( geteuid());		// initialise hardware drivers
   console_init();
   m6809_init();
   setup_brkhandler();
