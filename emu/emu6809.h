@@ -232,6 +232,7 @@ void lbvs(void);
 void reset(void);
 void irq(void);
 void firq(void);
+void nmi(void);
 
 /* memory.c */
 int memory_init(void);

@@ -35,8 +35,6 @@
 #include "emu6809.h"
 #include "hardware.h"
 
-struct Device *devices = NULL;
-
 /*
  * Looking for a config file ".sim6809.ini" in login dir or current dir
  * for describing the memory mapping and hardware configuration
@@ -67,12 +65,17 @@ int io_high = 0xE800;
 int rom = 0xF000;
 
 int loading = 0;
+struct Device *devices = NULL;
 
-void m6850_init( char* devname, int adr, char int_line, int speed){
-  printf ("device %s (type %d) @ 0x%04X, %ld bds, interrupt: %c\n", devname, M6850, adr, speed, int_line);
-}
+// show devices with their status
 void new_device( int devtype, char* devname, int adr, char int_line) {
   printf ("device %s (type %d) @ 0x%04X interrupt: %c\n", devname, devtype, adr, int_line);
+}
+void verify_config()
+{
+//  printf ("device %s (type %d) @ 0x%04X, %ld bds, interrupt: %c\n", devname, M6850, adr, speed, int_line);
+//  printf ("device %s (type %d) @ 0x%04X interrupt: %c\n", devname, devtype, adr, int_line);
+//	printf( "m6850 : status =  %02x ........\n", acia.sr);
 }
 
 void get_config( uid_t uid) {
@@ -130,7 +133,7 @@ void get_config( uid_t uid) {
 		io_low = param1;
 		io_high = param2;
 	  } else if (strcmp( keyword, "M6840") == 0)
-		new_device( M6840, keyword, param1, int_line);
+		m6840_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "M6850") == 0) {
 	  while (isalpha( *strptr2))
 		strptr2++;
@@ -140,19 +143,19 @@ void get_config( uid_t uid) {
 		  speed = 9600;
 		m6850_init( keyword, param1, int_line, speed);
 	  } else if (strcmp( keyword, "M6820") == 0)
-		new_device( M6820, keyword, param1, int_line);
+		m6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "M6821") == 0)
-		new_device( M6820, keyword, param1, int_line);
+		m6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6520") == 0)
-		new_device( M6820, keyword, param1, int_line);
+		m6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6521") == 0)
-		new_device( M6820, keyword, param1, int_line);
+		m6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6522") == 0)
-		new_device( R6522, keyword, param1, int_line);
+		r6522_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6532") == 0)
-		new_device( R6532, keyword, param1, int_line);
+		r6532_init( keyword, param1, int_line);
 	  else
-	    printf( "Unrecognised keyword '%s' in '%s'\n", keyword, filename);
+	    printf( "Unrecognised device '%s' in '%s'\n", keyword, filename);
 	  if (rom < 0)
 		rom = 0x10000; // No rom ???
 	  if (mem_low < 0)
@@ -168,7 +171,67 @@ void get_config( uid_t uid) {
   }
 }
 
-// show devices with their status
-void dump_dev() {
-//	printf( "m6850 : status =  %02x ........\n", acia.sr);
+// clock vs devices
+void device_run() {
+  struct Device *dev;
+  if (devices == NULL)
+    return;
+  while (dev != NULL) {
+    switch (dev->type) {
+	  case M6850: m6850_run( dev); break;
+	  case M6840: m6840_run( dev); break;
+	  case M6820: m6820_run( dev); break;
+	  case R6522: r6522_run( dev); break;
+	  case R6532: r6532_run( dev); break;
+	  default: break;
+	}
+	dev = dev->next;
+  }
+}
+
+// Search a device from its address
+struct Device *look_dev( tt_u16 adr)
+{
+  struct Device *dev;
+  dev = devices;
+  while (dev != NULL) {
+  	if (adr >= dev->addr && adr < dev->end)
+	  break;
+	dev = dev->next;
+  }
+  return dev;
+}
+
+// reading a device
+tt_u8 read_device(tt_u16 adr)
+{
+  struct Device *dev;
+  if ((dev = look_dev( adr)) == NULL) {
+    err6809 = ERR_NO_DEVICE;
+	return 0;
+  }
+  switch (dev->type) {
+    case M6850: return m6850_read( dev, adr);
+    case M6840: return m6840_read( dev, adr);
+    case M6820: return m6820_read( dev, adr);
+    case R6522: return r6522_read( dev, adr);
+    case R6532: return r6532_read( dev, adr);
+  }
+}
+
+// writing a device
+extern void write_device(tt_u16 adr, tt_u8 val)
+{
+  struct Device *dev;
+  if ((dev = look_dev( adr)) == NULL) {
+    err6809 = ERR_NO_DEVICE;
+	return;
+  }
+  switch (dev->type) {
+    case M6850: m6850_write( dev, adr, val);return; 
+    case M6840: m6840_write( dev, adr, val);return; 
+    case M6820: m6820_write( dev, adr, val);return; 
+    case R6522: r6522_write( dev, adr, val);return; 
+    case R6532: r6532_write( dev, adr, val);return; 
+  }
 }

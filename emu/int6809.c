@@ -51,5 +51,13 @@ void firq(void)
   }
 }
 
-
-
+void nmi(void)
+{
+  if (!cci) {
+    cce = 1;
+    do_psh(&rs, &ru, 0xff);
+    cci = 1;
+    rpc = get_memw(0xfffc);
+    nbcycle = 21;
+  }
+}

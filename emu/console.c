@@ -28,7 +28,6 @@
 #include "console.h"
 
 #include "../hardware/hardware.h"
-#include "../hardware/acia.h"
 
 static char *errmsg[] = {
   "",
@@ -114,7 +113,7 @@ int execute()
   do {
 	while ((n = m6809_execute()) > 0 && !activate_console) {
 	  cycles += n;
-	  (*acia_run)();
+	  device_run();
 
 	}
 	if (activate_console && n > 0)
@@ -140,7 +139,7 @@ void execute_addr(tt_u16 addr)
   while (!activate_console && rpc != addr) {
 	while ((n = m6809_execute()) > 0 && !activate_console && rpc != addr) {
 	  cycles += n;
-	  acia_run();
+	  device_run();
 	}
 	if (n == SYSTEM_CALL)
 	  activate_console = m6809_system();
@@ -472,16 +471,14 @@ int main(int argc, char **argv)
     return 1;
   parse_cmdline(argc, argv);	// load code from file
   get_config( geteuid());		// initialise hardware drivers
+  verify_config();				// display devices emulated
   console_init();
   m6809_init();
   setup_brkhandler();
 
-  // hardware drivers
-  acia_init(1);
-
   console_command();
 
   // unload drivers
-  acia_destroy();
+//  acia_destroy();
   return 0;
 }

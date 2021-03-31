@@ -24,7 +24,6 @@
 #include "console.h"
 
 #include "../hardware/hardware.h"
-#include "../hardware/acia.h"
 
 tt_u8 *ramdata;    /* 64 kb of ram */
 
@@ -45,16 +44,9 @@ tt_u8 get_memb(tt_u16 adr)
       return (0);
     }
     return ramdata[adr];
+  } else {
+	return read_device( adr);  // hardware mapper
   }
-
-  // hardware mapper
-  switch (adr & 0xff00) {
-    case 0xe100:	// ACIA
-    	return acia_rreg(adr & 0xff);
-    default:
-    	break;
-  }
-
 }
 
 tt_u16 get_memw(tt_u16 adr)
@@ -76,26 +68,16 @@ void set_memb(tt_u16 adr, tt_u8 val)
   }
 
 // managing memory available on simulated hardware
-  if (adr < mem_low || adr >= mem_high) {
-    printf( "write %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
-    err6809 = ERR_NO_MEMORY;
-    return;
-  }
-
-// not inside io space ?
-  if (adr < io_low || adr >= io_high) {
+  if (adr < io_low || adr >= io_high) { // not inside io space ?
+    if (adr < mem_low || adr >= mem_high) {
+      printf( "write %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
+      err6809 = ERR_NO_MEMORY;
+      return;
+    }
     ramdata[adr] = val;
     return;
-  }
-
-// @TODO : gestion dynamique des adaptateurs
-    switch (adr & 0xff00) {
-      case 0xe100:	// ACIA
-        acia_wreg(adr & 0xff, val);
-	break;
-      default:
-        break;
-    }
+  } else
+	write_device( adr, val);
 }
 
 void set_memw(tt_u16 adr, tt_u16 val)

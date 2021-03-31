@@ -133,14 +133,14 @@ void m6850_init( char* devname, int adr, char int_line, int speed) {
 		exit( 1);
 	}
 
-	printf( "ACIA OK\n");
-	acia_hardware = fdopen( pts, "w");
-	fprintf( acia_hardware, "+-----------------------------------------+\r\n");
-	fprintf( acia_hardware, "| sim6809 v0.1 - Emulated MC6850 ACIA I/O |\r\n");
-	fprintf( acia_hardware, "+-----------------------------------------+\r\n\n");
-
+//	printf( "ACIA OK\n");
+	char *s1 = "+-----------------------------------------+\r\n";
+	char *s2 = "| sim6809 v0.1 - Emulated MC6850 ACIA I/O |\r\n";
+	char *s3 = "+-----------------------------------------+\r\n\n";
+	write( pts, s1, strlen( s1));
+	write( pts, s2, strlen( s2));
+	write( pts, s3, strlen( s3));
 }
-
 
 void acia_destroy() {
 	pclose( xterm_stdout);
