@@ -68,14 +68,39 @@ int loading = 0;
 struct Device *devices = NULL;
 
 // show devices with their status
-void new_device( int devtype, char* devname, int adr, char int_line) {
-  printf ("device %s (type %d) @ 0x%04X interrupt: %c\n", devname, devtype, adr, int_line);
+void showdev() {
+  struct Device *dev = devices;
+  char *itxt;
+  while( dev != NULL) {
+
+	printf ("%s @ 0x%04X (interrupt: %c) ", dev->devname, dev->type, dev->addr, dev->interrupt);
+	
+    switch (dev->type) {
+	  case M6850: m6850_reg( dev); break;
+	  case M6840: m6840_reg( dev); break;
+	  case M6820: m6820_reg( dev); break;
+	  case R6522: r6522_reg( dev); break;
+	  case R6532: r6532_reg( dev); break;
+	  default: break;
+	}
+	dev = dev->next;
+  }
 }
-void verify_config()
+
+void verify_config()	// display devices emulated
 {
-//  printf ("device %s (type %d) @ 0x%04X, %ld bds, interrupt: %c\n", devname, M6850, adr, speed, int_line);
-//  printf ("device %s (type %d) @ 0x%04X interrupt: %c\n", devname, devtype, adr, int_line);
-//	printf( "m6850 : status =  %02x ........\n", acia.sr);
+  int halt = 0;
+  struct Device *dev = devices;
+  while( dev != NULL) {
+	if (dev->addr < io_low || dev->end > io_high) {
+	  printf( "Bad address for %s @ 0x%04X, outside I/O space [%04X-%04X[\n",
+	  		dev->devname, dev->addr, io_low, io_high);
+	  halt = 1;
+	}
+	dev = dev->next;
+  }
+  if (halt)
+	exit( 1);
 }
 
 void get_config( uid_t uid) {
@@ -135,8 +160,8 @@ void get_config( uid_t uid) {
 	  } else if (strcmp( keyword, "M6840") == 0)
 		m6840_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "M6850") == 0) {
-	  while (isalpha( *strptr2))
-		strptr2++;
+		while (isalpha( *strptr2))
+		  strptr2++;
 		if (more_params( &strptr2))
 		  speed = strtol( strptr2, tail, 10);
 		else
@@ -156,6 +181,7 @@ void get_config( uid_t uid) {
 		r6532_init( keyword, param1, int_line);
 	  else
 	    printf( "Unrecognised device '%s' in '%s'\n", keyword, filename);
+
 	  if (rom < 0)
 		rom = 0x10000; // No rom ???
 	  if (mem_low < 0)
@@ -166,16 +192,15 @@ void get_config( uid_t uid) {
 	    io_low = rom;
 	  if (io_high < 0)
 	    io_high = rom;
-//	  verify_devices();
 	}
   }
+  verify_config();
 }
 
 // clock vs devices
 void device_run() {
   struct Device *dev;
-  if (devices == NULL)
-    return;
+  dev = devices;
   while (dev != NULL) {
     switch (dev->type) {
 	  case M6850: m6850_run( dev); break;

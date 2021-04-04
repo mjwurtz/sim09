@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
@@ -44,8 +45,8 @@ struct Acia {
 	uint8_t sr;
 	uint8_t tdr;
 	uint8_t rdr;
-	uint32_t acia_cycles;
-	uint32_t acia_clock;
+	uint32_t acia_cycles;	// number of cyles udes to transmit/receive a character
+	uint32_t acia_clock;	// next time one can read or write 
 } ;
 
 char *ptsname(int);
@@ -71,13 +72,15 @@ void m6850_init( char* devname, int adr, char int_line, int speed) {
 	new->type = M6850;
 	new->addr = adr;
 	new->end = adr+2;
-	new->interupt = int_line;
+	new->interrupt = int_line;
 	acia = mmalloc( sizeof( struct Acia));
 	new->registers = acia;
 	new->next = devices;
 	devices = new;
-	// Nb of clocks between characters function of speed in bps
-	acia->acia_clock = (int)((1e7/(float)(speed))+0.5);
+	// Nb of cycles between characters function of speed in bps
+	acia->acia_cycles = (int)((1e7/(float)(speed))+0.5);
+	acia->acia_clock = 0;
+	
 	// configure a pseudo terminal and print its name on the console
 	char *slavename;
 
@@ -154,39 +157,43 @@ void m6850_run( struct Device *dev) {
 	struct Acia *acia;
 
 	acia = dev->registers;
-	if (cycles < acia->acia_cycles) return;		// nothing to do yet
-	acia->acia_cycles = cycles + acia->acia_clock;	// nudge timer
+	if (cycles < acia->acia_clock) return;			// nothing to do yet
+
 	// read a character?
-	i =read(pts, &buf, 1);
-	if(i != -1) {
+	if ((acia->sr & 0x01) == 0) {
+	  i =read(pts, &buf, 1);
+	  if(i > 0) {
 		acia->rdr = buf;
 		acia->sr |= 0x01;
 		if (acia->cr & 0x80) {
-			acia->sr |= 0x80;
-			switch (dev->interupt) {
-			  case 'F': firq(); break;
-			  case 'I': irq(); break;
-			  case 'N': nmi();
-			  default: break;
-			}
+		  acia->sr |= 0x80;
+		  switch (dev->interrupt) {
+			case 'F': firq(); break;
+			case 'I': irq(); break;
+			case 'N': nmi();
+			default: break;
+		  }
 		}
-	}
+	  }
+	} else
+	  acia->sr &= 0xfe;
 	
 	// got a character to send?
-	if (!(get_memb(0xe100) & 0x02)) {
+	if ((acia->sr & 0x02) == 0) {
 		buf = acia->tdr;
 		write(pts, &buf, 1);
 		acia->sr |= 0x02;
 		if ((acia->cr & 0x60) == 0x20) {
 			acia->sr |= 0x80;
-			switch (dev->interupt) {
+			switch (dev->interrupt) {
 			  case 'F': firq(); break;
 			  case 'I': irq(); break;
 			  case 'N': nmi();
 			  default: break;
 			}
 		}
-	}
+	} else
+	  acia->sr |= 0xfd;
 }
 
 // handle reads from ACIA registers
@@ -198,6 +205,7 @@ uint8_t m6850_read( struct Device *dev, tt_u16 reg) {
 			return acia->sr;
 		case ACIA_RDR:
 			acia->sr &= 0x7e;	// clear IRQ, RDRF
+			acia->acia_clock = cycles + acia->acia_cycles;
 			return acia->rdr;
 	}
 	return 0xff;	// maybe the bus floats
@@ -207,14 +215,26 @@ uint8_t m6850_read( struct Device *dev, tt_u16 reg) {
 void m6850_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   struct Acia *acia;
   acia = dev->registers;
-	switch (reg & 0x01) {   // not fully mapped
+	switch (reg & 0x01) {   // not fully mapped CR0->CR4 ignored
 		case ACIA_CR:
 			acia->cr = val;
 			break;
 		case ACIA_TDR:
 			acia->tdr = val;
+			acia->acia_clock = cycles + acia->acia_cycles;
 			acia->sr &= 0x7d;	// clear IRQ, TDRE
 			break;
 	}
 }
 
+void m6850_reg( struct Device *dev) {
+  struct Acia *acia;
+  char tdr;
+  acia = dev->registers;
+  if (isprint( acia->tdr))
+  	tdr = acia->tdr;
+  else
+	tdr = '.';
+  printf( "CR:%02X, SR:%02X, RDR:'%c' (Ox%02X), TDR:'%c' (Ox%02X), cycles=%d/%d\n",
+  		acia->cr, acia->sr, acia->rdr, acia->rdr, tdr, acia->tdr, acia->acia_clock, cycles);
+}

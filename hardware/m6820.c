@@ -90,7 +90,7 @@ void m6820_init( char* name, int adr, char int_line) {
 	new->type = M6820;
 	new->addr = adr;
 	new->end = adr+4;
-	new->interupt = int_line;
+	new->interrupt = int_line;
 	pia = mmalloc( sizeof( struct Pia));
 	new->registers = pia;
 	new->next = devices;
@@ -173,3 +173,11 @@ void m6820_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   }
 }
 
+void m6820_reg( struct Device *dev) {
+  struct Pia *pia;
+  pia = dev->registers;
+  printf( "\n           CRA:%02X, DDRA:%02X, ORA:%02X, PIBA:%02X, CA2:%02X",
+	pia->cra, pia->ddra, pia->ora, pia->piba, pia->ca2);
+  printf( "\n           CRB:%02X, DDRB:%02X, ORB:%02X, PIBB:%02X, CB2:%02X\n",
+	pia->crb, pia->ddrb, pia->orb, pia->pibb, pia->cb2);
+}

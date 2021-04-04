@@ -116,8 +116,10 @@ int execute()
 	  device_run();
 
 	}
-	if (activate_console && n > 0)
+	if (activate_console && n > 0) {
 	  cycles += n;
+	  device_run();
+	}
 	
 	if (n == SYSTEM_CALL) {
 	  r = m6809_system();
@@ -228,6 +230,7 @@ void console_command()
   long n;
   int i, r;
   int regon = 0;
+  int devon = 0;
 
   for(;;) {
 	activate_console = 0;
@@ -270,6 +273,8 @@ void console_command()
 		  printf("Next PC: ");
 		  dis6809(rpc, stdout);
 		}
+		if (devon)
+		  showdev();
 		memadr = rpc;
 	  } else
 		printf("Syntax Error. Type 'h' to show help.\n");
@@ -284,6 +289,8 @@ void console_command()
 		  printf("Next PC: ");
 		  dis6809(rpc, stdout);
 		}
+		if (devon)
+		  showdev();
 	  memadr = rpc;
 	  break;
 	case 'h' : case '?' :
@@ -306,6 +313,8 @@ void console_command()
 	  printf("   t               : flush PC history\n");
 #endif
 	  printf("   u               : toggle dump registers\n");
+	  printf("   v               : show devices registers\n");
+	  printf("   w               : toggle show devices\n");
 	  printf("   y [0]           : show number of 6809 cycles [or set it to 0]\n");
 	  break;
 	case 'i' :
@@ -370,6 +379,8 @@ void console_command()
 	  memadr = rpc + dis6809(rpc, stdout);
 	  if (regon)
 		m6809_dumpregs();
+	  if (devon)
+		showdev();
 	} else
 	  break;
 	  }
@@ -404,6 +415,13 @@ void console_command()
 	  regon ^= 1;
 	  printf("Dump registers %s\n", regon ? "on" : "off");
 	  break;
+	case 'v' :
+	  showdev();
+	  break;
+	case 'w' :
+	  devon ^= 1;
+	  printf("Show devices registers %s\n", devon ? "on" : "off");
+	  break;
 	case 'y' :
 	  if (more_params(&strptr))
 	if(readint(&strptr) == 0) {
@@ -412,9 +430,8 @@ void console_command()
 	} else
 	  printf("Syntax Error. Type 'h' to show help.\n");
 	  else {
-	double sec = (double)cycles / 1000000.0;
-
-	printf("Cycle counter: %ld\nEstimated time at 1 Mhz : %g seconds\n", cycles, sec);
+		double sec = (double)cycles / 1000000.0;
+		printf("Cycle counter: %ld\nEstimated time at 1 Mhz : %g seconds\n", cycles, sec);
 	  }
 	  break;
 	default :
@@ -429,7 +446,6 @@ void usage( char *cmd) {
 	printf("       %s -b <file> [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
 	printf("       %s -m [<file> [...]] => load 0..n motorola .s19 file(s)\n", cmd);
 	printf("       %s -i [<file> [...]] => load 0..n intel .hex file(s)\n", cmd);
-	printf("       %s -s <file> => load/assemble source file\n", cmd);
 	exit(0);
 }
 
@@ -471,7 +487,6 @@ int main(int argc, char **argv)
     return 1;
   parse_cmdline(argc, argv);	// load code from file
   get_config( geteuid());		// initialise hardware drivers
-  verify_config();				// display devices emulated
   console_init();
   m6809_init();
   setup_brkhandler();

@@ -89,7 +89,7 @@ void m6840_init( char* devname, int adr, char int_line) {
 	new->type = M6840;
 	new->addr = adr;
 	new->end = adr+8;
-	new->interupt = int_line;
+	new->interrupt = int_line;
 	timer = mmalloc( sizeof( struct Timer));
 	new->registers = timer;
 	new->next = devices;
@@ -107,9 +107,9 @@ void m6840_run( struct Device *dev) {
 	// @TODO : manage counter change at processor frequency (1Mhz)
 
 
-	// An interupt condition occured
+	// An interrupt condition occured
 	if (timer->sr & 0x80) {
-	  switch (dev->interupt) {
+	  switch (dev->interrupt) {
 		case 'F': firq(); break;
 		case 'I': irq(); break;
 		case 'N': nmi();
@@ -165,3 +165,13 @@ void m6840_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 	}
 }
 
+void m6840_reg( struct Device *dev) {
+  struct Timer *timer;
+  timer = dev->registers;
+  printf( "\n       Timer 1 - CR1:%02X, TIMER:%02X, LATCH1:%02X,",
+	  	timer->cr1, timer->timer1, timer->latch1);
+  printf( "\n       Timer 2 - CR2:%02X, TIMER:%02X, LATCH2:%02X,",
+		timer->cr2, timer->timer2, timer->latch2);
+  printf( "\n       Timer 3 - CR3:%02X, TIMER:%02X, LATCH3:%02X, SR:%02X)\n",
+		timer->cr3, timer->timer3, timer->latch3, timer->sr);
+}

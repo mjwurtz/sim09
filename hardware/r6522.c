@@ -101,7 +101,7 @@ void r6522_init( char* name, int adr, char int_line) {
 	new->type = R6522;
 	new->addr = adr;
 	new->end = adr+16;
-	new->interupt = int_line;
+	new->interrupt = int_line;
 	via = mmalloc( sizeof( struct Via6522));
 	new->registers = via;
 	new->next = devices;
@@ -210,3 +210,15 @@ void r6522_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   }
 }
 
+void r6522_reg( struct Device *dev) {
+  struct Via6522 *via;
+  via = dev->registers;
+  printf( "\n           PCR:%02X, DDRA:%02X, ORA:%02X, IRA:%02X, CA2:%02X",
+		via->pcr, via->ddra, via->ora, via->ira, via->ca2);
+  printf( "\n           CRB:%02X, DDRB:%02X, ORB:%02X, IRB:%02X, CB1:%02X, CB2:%02X",
+		via->acr, via->ddrb, via->orb, via->irb, via->cb1, via->cb2);
+  printf( "\n           T1C-L:%02X, T1C-H:%02X, T1L-L:%02X, T1L-H:%02X, CB1:%02X, CB2:%02X",
+		via->t1c_l, via->t1c_h, via->t1l_l, via->t1l_h);
+  printf( "\n           T2C-L:%02X, T12-H:%02X, SR:%02X, IFR:%02X, IER:%02X\n",
+		via->t2c_l, via->t2c_h, via->sr, via->ifr, via->ier);
+}

@@ -36,29 +36,15 @@
 
 struct Via6532 {
 	uint8_t ram[128];
-	uint8_t orb;
-	uint8_t irb;
-	uint8_t ora;
-	uint8_t ira;
+	uint8_t dra;
 	uint8_t ddra;
+	uint8_t drb;
 	uint8_t ddrb;
-	uint8_t t1c_l;
-	uint8_t t1c_h;
-	uint8_t t1l_l;
-	uint8_t t1l_h;
-	uint8_t t2c_l;
-	uint8_t t2c_h;
-	uint8_t sr;
-	uint8_t acr;
-	uint8_t pcr;
+	uint8_t timer;
+	uint8_t timer_w;
+	uint16_t settings; // bit 0-1 = divisor, bit 5 = enable int, bit 7 = PA7 int
 	uint8_t ifr;
-	uint8_t ier;
-	int8_t ca2;
-	int8_t setca2;
-	int8_t cb1;
-	int8_t setcb1;
-	int8_t cb2;
-	int8_t setcb2;
+	uint8_t edc;
 };
 
 /*
@@ -70,25 +56,6 @@ struct Via6532 {
 void r6532_reset( struct Device *dev) {
 	struct Via6532 *via;
 	
-	via = dev->registers;
-	via->orb = 0;
-	via->irb = 0;
-	via->ora = 0;
-	via->ira = 0;
-	via->ddrb = 0;
-	via->ddra = 0;
-	via->sr = 0;
-	via->acr = 0;
-	via->pcr = 0;
-	via->ifr = 0;
-	via->ier = 0;
-
-	via->ca2 = 0;
-	via->setca2 =0;
-	via->cb1 = 0;
-	via->setcb1 =0;
-	via->cb2 = 0;
-	via->setcb2 =0;
 }
 
 // Creation of PIA
@@ -102,7 +69,7 @@ void r6532_init( char* name, int adr, char int_line) {
 	new->type = R6532;
 	new->addr = adr;
 	new->end = adr+160;
-	new->interupt = int_line;
+	new->interrupt = int_line;
 	via = mmalloc( sizeof( struct Via6532));
 	new->registers = via;
 	new->next = devices;
@@ -118,48 +85,30 @@ void r6532_run( struct Device *dev) {
   via = dev->registers;
 }
 
-// handle reads from PIA registers
+// handle reads from VIA registers
 uint8_t r6532_read( struct Device *dev, tt_u16 reg) {
   struct Via6532 *via;
   via = dev->registers;
-  if (reg & 0x80 == 0)
+  if (reg & 0x80 == 0)	// RAM
 	return via->ram[reg & 0x7F];
 
-  switch( reg & 0x0f) {
-	case 0x00 :
-	case 0x0f :
-		return via->irb; // always 0...
-	case 0x01 :
-	  return via->ira;
-	case 0x02 :
-	  return via->ddrb;
-	case 0x03 :
-	  return via->ddra;
-	case 0x04 :
-	  return via->t1c_l;
-	case 0x05 :
-	  return via->t1c_h;
-	case 0x06 :
-	  return via->t1l_l;
-	case 0x07 :
-	  return via->t1l_h;
-	case 0x08 :
-	  return via->t2c_l;
-	case 0x09 :
-	  return via->t2c_h;
-	case 0x0a :
-	  return via->sr;
-	case 0x0b :
-	  return via->acr;
-	case 0x0c :
-	  return via->pcr;
-	case 0x0d :
+  if (reg & 0x04) {		// TIMER
+  	if (reg & 0x01)
 	  return via->ifr;
-	case 0x0e :
-	  return via->ier;
-	default:
-	  err6809 = ERR_NO_DEVICE;
-	  return 0;
+	else {
+	  if (reg & 0x08)
+		via->settings |= 0x08;
+	  else
+		via->settings &= 0xf7;
+	  return via->timer;
+	}
+  } else {				// PIA
+	switch (reg & 0x03) {
+	  case 0: return via->dra;
+	  case 1: return via->ddra;
+	  case 2: return via->drb;
+	  case 3: return via->ddrb;
+	}
   }
 }
 
@@ -171,55 +120,48 @@ void r6532_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 	via->ram[reg & 0x7F] = val;
 	return;
   }
-  switch( reg & 0x7f) {
-	case 0x00 :
-	case 0x0f :
-	  via->orb = val;
-	  return;
-	case 0x01 :
-	  via->ira = val;
-	  return;
-	case 0x02 :
-	  via->ddrb = val;
-	  return;
-	case 0x03 :
-	  via->ddra = val;
-	  return;
-	case 0x04 :
-	  via->t1c_l = val;
-	  return;
-	case 0x05 :
-	  via->t1c_h = val;
-	  return;
-	case 0x06 :
-	  via->t1l_l = val;
-	  return;
-	case 0x07 :
-	  via->t1l_h = val;
-	  return;
-	case 0x08 :
-	  via->t2c_l = val;
-	  return;
-	case 0x09 :
-	  via->t2c_h = val;
-	  return;
-	case 0x0a :
-	  via->sr = val;
-	  return;
-	case 0x0b :
-	  via->acr = val;
-	  return;
-	case 0x0c :
-	  via->pcr = val;
-	  return;
-	case 0x0d :
-	  via->ifr = val;
-	  return;
-	case 0x0e :
-	  via->ier = val;
-	  return;
-	default:
-	  err6809 = ERR_NO_DEVICE;
+
+  if (reg & 0x04) {
+	if (reg & 0x10) {	// TIMER
+		via->settings &= 0xf4;
+		via->settings |= (reg & 0x0b);
+		via->timer = val;
+	} else {			// EDC
+	  if (reg & 0x02)
+	  	via->settings |= 0x80;
+	  else
+		via->settings &= 0x7f;
+	  via->edc = val;
+	}
+  } else {				// PIA
+	switch (reg & 0x03) {
+	  case 0: via->dra = val; return;
+	  case 1: via->ddra = val; return;
+	  case 2: via->drb = val; return;
+	  case 3: via->ddrb = val; return;
+	}
   }
 }
 
+void r6532_reg( struct Device *dev) {
+  struct Via6532 *via;
+  int tdiv[] = {1, 8, 64, 1024};
+  char iset[12];
+  via = dev->registers;
+  if (via->settings & 0x80)
+	strcpy( iset, "timer");
+  else
+	*iset = 0;
+  if (via->settings & 0x80)
+	if (*iset)
+	  strcat(iset, ", PA7");
+	else
+	  strcpy(iset, "PA7");
+  if (*iset != 0)
+	strcpy( iset, "none");
+
+  printf( "\n           DRA:%02X, DDRA:%02X, DRB:%02X, DDRB:%02X",
+		via->dra, via->ddra, via->drb, via->ddrb);
+  printf( "\n           TIMER:%02X [/%dT], IFR:%02X, EDC:%02X, interrupt : %s\n",
+		via->timer, tdiv[via->settings & 0x03], via->ifr, via->edc, iset);
+}
