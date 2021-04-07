@@ -58,10 +58,11 @@
 
 extern char *readstr(char **c);
 
+// Default values, with mc6850 ACIA at 0xE100
 int mem_low = 0;
-int mem_high = 0xF000;
+int mem_high = 0xE000;
 int io_low = 0xE000;
-int io_high = 0xE800;
+int io_high = 0xF000;
 int rom = 0xF000;
 
 int loading = 0;
@@ -127,11 +128,14 @@ void get_config( uid_t uid) {
     n = strlen( pw->pw_dir);
 	filename = mmalloc( n + 16);
 	strcpy( filename, pw->pw_dir);
-	strcpy( filename + n, "/.simc6809.ini");
+	strcpy( filename + n, "/.sim6809.ini");
 	if( (fconf = fopen( filename, "r")) == NULL) {
 	  free( filename);
-	  fconf = fopen( ".simc6809.ini", "r");
+	  fconf = fopen( ".sim6809.ini", "r");
 	}
+  } else {
+    printf( "Don't know who i am ! Aborting.\n");
+	exit( 1);
   }
 
   if (fconf != NULL) { // Overwrite default values
@@ -201,6 +205,9 @@ void get_config( uid_t uid) {
 	  if (io_high < 0)
 	    io_high = rom;
 	}
+  } else {
+    printf( "No config file, using default values...\n");
+	mc6850_init( "MC6821", 0xE000, 'I', 9600);
   }
   verify_config();
 }

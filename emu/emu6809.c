@@ -562,9 +562,10 @@ tt_u16 get_eaw()
 
 void m6809_init()
 {
-  rpc = rx = ry = ru = rs = 0;
+  rx = ry = ru = rs = 0;
   ra = rb = rdp = 0;
   setcc(0);
+  rpc = get_memw( 0xFFFE);  // initialise PC for reset
 }
 
 int m6809_execute()

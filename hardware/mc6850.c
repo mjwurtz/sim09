@@ -17,8 +17,10 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #define _XOPEN_SOURCE
+#define __USE_POSIX199309
 
 #include <sys/stat.h>
+#include <time.h>
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -35,10 +37,33 @@
 #include "../emu/emu6809.h"
 #include "hardware.h"
 
+// ACIA_CLOCK : number of machine cycles needed for transmitting
+// or receiving one character.
+// If ACIA_CLOCK is not defined, this number is erived from the speed in bps.
+// To speed the simulation, a small number can be used...
+
+#define ACIA_CLOCK 0 // No wait for I/O
+
+// Input conversion from LF to CR to make Flex system working with return key
+
+#define FLEX
+
+// Avoid using 100%cpu while waiting for input (select unusable
+// since it returns allways 0 after testing a read on pts...
+
+#define SLOWDOWN
+
 #define ACIA_CR 0
 #define ACIA_SR 0
 #define ACIA_TDR 1
 #define ACIA_RDR 1
+
+/*
+   The 6850 ACIA registers are:
+   $00 control register / status register
+   $01 transmit register / receive register
+   RTS, CTS and DCD are not used, with the latter two held grounded
+*/
 
 struct Acia {
 	uint8_t cr;
@@ -46,7 +71,8 @@ struct Acia {
 	uint8_t tdr;
 	uint8_t rdr;
 	uint32_t acia_cycles;	// number of cyles udes to transmit/receive a character
-	uint32_t acia_clock;	// next time one can read or write 
+	uint32_t acia_clock_r;	// next time we can read
+	uint32_t acia_clock_w;	// next time we can write 
 } ;
 
 char *ptsname(int);
@@ -55,12 +81,11 @@ static int pts;
 static FILE *xterm_stdout;
 static FILE *acia_hardware;
 
-/*
-   The 6850 ACIA registers are:
-   $00 control register / status register
-   $01 transmit register / receive register
-   RTS, CTS and DCD are not used, with the latter two held grounded
-*/
+#ifdef SLOWDOWN
+static struct timespec delay, remain;
+extern int nanosleep( const struct timespec *delay, struct timespec *remain);
+#define SLOWDOWN_DELAY 50 // delay of 50 ns to avoid 100% CPU usage
+#endif
 
 void mc6850_init( char* devname, int adr, char int_line, int speed) {
 	struct Device *new;
@@ -79,10 +104,15 @@ void mc6850_init( char* devname, int adr, char int_line, int speed) {
 	devices = new;
 
 	// Nb of cycles between characters function of speed in bps
+#ifdef ACIA_CLOCK
+	acia->acia_cycles = ACIA_CLOCK;
+#else
 	acia->acia_cycles = (int)((1e7/(float)(speed))+0.5);
-	acia->acia_clock = 0;
-acia->acia_clock = 0;	
-	// configure a pseudo terminal and print its name on the console
+#endif
+	acia->acia_clock_r = cycles;	// start with a ready device
+	acia->acia_clock_w = cycles;	// start with a ready device
+
+// configure a pseudo terminal and print its name on the console
 	char *slavename;
 
 	int ptmx = open("/dev/ptmx", O_RDWR | O_NOCTTY);
@@ -138,17 +168,23 @@ acia->acia_clock = 0;
 	}
 
 //	printf( "ACIA OK\n");
-	char *s1 = "+-----------------------------------------+\r\n";
+	char *s1 = "+------------------------------------------+\r\n";
 	char *s2 = "| simc6809 v0.1 - Emulated MC6850 ACIA I/O |\r\n";
-	char *s3 = "+-----------------------------------------+\r\n\n";
+	char *s3 = "+------------------------------------------+\r\n";
 	write( pts, s1, strlen( s1));
 	write( pts, s2, strlen( s2));
 	write( pts, s3, strlen( s3));
 
-char buf;
-	while (read( pts, &buf, 1) > 0)
-		putchar( buf);
-	putchar( '\n');
+	char buf; // why pts input get something in the first 1/10 sec ?
+#ifdef SLOWDOWN
+	delay.tv_sec = 0;
+	delay.tv_nsec = 100000000;	// Wait 1/10 sec and empty input buffer
+	nanosleep( &delay, &remain);
+	delay.tv_nsec = SLOWDOWN_DELAY;
+#else
+	sleep( 1);
+#endif
+	while (read( pts, &buf, 1) > 0);
 }
 
 void acia_destroy() {
@@ -158,34 +194,15 @@ void acia_destroy() {
 
 void mc6850_run( struct Device *dev) {
 	// call this every time around the loop
-	int i;
+	int i, n;
 	char buf;
 	struct Acia *acia;
 
 	acia = dev->registers;
-	if (cycles < acia->acia_clock) return;			// nothing to do yet
+	if (cycles >= acia->acia_clock_w) {	// something to do ?
 
-	// read a character?
-	if ((acia->sr & 0x01) == 0) {
-	  i =read(pts, &buf, 1);
-	  if(i > 0) {
-		acia->rdr = buf;
-		acia->sr |= 0x01;
-		if (acia->cr & 0x80) {
-		  acia->sr |= 0x80;
-		  switch (dev->interrupt) {
-			case 'F': firq(); break;
-			case 'I': irq(); break;
-			case 'N': nmi();
-			default: break;
-		  }
-		}
-	  }
-	} else
-	  acia->sr &= 0xfe;
-	
 	// got a character to send?
-	if ((acia->sr & 0x02) == 0) {
+	  if ((acia->sr & 0x02) == 0) {
 		buf = acia->tdr;
 		write(pts, &buf, 1);
 		acia->sr |= 0x02;
@@ -198,8 +215,38 @@ void mc6850_run( struct Device *dev) {
 			  default: break;
 			}
 		}
-	} else
-	  acia->sr |= 0xfd;
+		return;
+	  }
+	}
+	
+	if (cycles < acia->acia_clock_r) return;	// nothing to do yet
+
+	// character ready in input buffer ?
+	if ((acia->sr & 0x01) == 0) {
+	  i = read(pts, &buf, 1);
+	  if(i > 0) {
+#ifdef FLEX
+		if (buf == '\n')	// Unix to Flex conversion...
+		  buf = '\r';
+#endif
+		acia->rdr = buf;
+		acia->sr |= 0x01;
+		if (acia->cr & 0x80) {
+		  acia->sr |= 0x80;
+		  switch (dev->interrupt) {
+			case 'F': firq(); break;
+			case 'I': irq(); break;
+			case 'N': nmi();
+			default: break;
+		  }
+		}
+	  } else {
+		acia->sr &= 0xFE;
+#ifdef SLOWDOWN
+		nanosleep( &delay, &remain);
+#endif
+	  }
+	}
 }
 
 // handle reads from ACIA registers
@@ -207,12 +254,12 @@ uint8_t mc6850_read( struct Device *dev, tt_u16 reg) {
   struct Acia *acia;
   acia = dev->registers;
 	switch (reg & 0x01) {   // not fully mapped
-		case ACIA_SR:
-			return acia->sr;
-		case ACIA_RDR:
-			acia->sr &= 0x7e;	// clear IRQ, RDRF
-			acia->acia_clock = cycles + acia->acia_cycles;
-			return acia->rdr;
+	  case ACIA_SR:
+		return acia->sr;
+	  case ACIA_RDR:
+		acia->sr &= 0x7e;	// clear IRQ, RDRF
+		acia->acia_clock_r = cycles + acia->acia_cycles;
+		return acia->rdr;
 	}
 	return 0xff;	// maybe the bus floats
 }
@@ -227,7 +274,7 @@ void mc6850_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 			break;
 		case ACIA_TDR:
 			acia->tdr = val;
-			acia->acia_clock = cycles + acia->acia_cycles;
+			acia->acia_clock_w = cycles + acia->acia_cycles;
 			acia->sr &= 0x7d;	// clear IRQ, TDRE
 			break;
 	}
@@ -245,6 +292,8 @@ void mc6850_reg( struct Device *dev) {
   	tdr = acia->tdr;
   else
 	tdr = '.';
-  printf( "CR:%02X, SR:%02X, RDR:'%c' (Ox%02X), TDR:'%c' (Ox%02X), cycles=%d/%d\n",
-  		acia->cr, acia->sr, rdr, acia->rdr, tdr, acia->tdr, acia->acia_clock, cycles);
+  printf( "CR:%02X, SR:%02X, RDR:'%c' (Ox%02X), TDR:'%c' (Ox%02X)\n",
+  		acia->cr, acia->sr, rdr, acia->rdr, tdr, acia->tdr);
+  printf( "                           read clock=%ld, write_clock=%ld, cycles=%ld\n",
+  		acia->acia_clock_r, acia->acia_clock_w, cycles);
 }

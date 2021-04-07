@@ -82,11 +82,6 @@ extern void fd1795_reg( struct Device *dev);
 #define MC6840 1	// TIMER
 #define MC6850 2	// ACIA
 
-// ACIA_CLOCK should be -1 for simulate delay in processor cycles
-// and is computed in function of speed in bps
-#define ACIA_CLOCK 0 // No wait for I/O, use 1 processor cycle
-// #define ACIA_CLOCK -1
-
 // Rockwell :
 #define R6522 4		// VIA (Versatile Interface adapter : I/O + timer)
 #define R6532 5		// RIOT (RAM, I/O, TIMER)
