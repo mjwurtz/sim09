@@ -1,5 +1,5 @@
 /* vim: set noexpandtab ai ts=4 sw=4 tw=4:
-   hardware.c -- emulation of 68xx and 65xx hardware
+   hardware.c -- emulation of Motorola 68xx and Rockwell 65xx devices
    Copyright (C) 2021 Michel J Wurtz
 
    This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,7 @@
 #include "hardware.h"
 
 /*
- * Looking for a config file ".sim6809.ini" in login dir or current dir
+ * Looking for a config file ".simc6809.ini" in login dir or current dir
  * for describing the memory mapping and hardware configuration
  * Defaut: ROM >= F000, RAM = 0000-EFFF, I/O = E000-E7FF, 6850 ACIA @ E100
  * I/O space may split RAM... devices are named and can be added further
@@ -45,12 +45,12 @@
  * memory layout set by keywords mem <low> <high+1>, io <low> <high+1>, rom
  * other lines contain name of device followed by its base address and
  * interrupt line. For ACIA, also speed in bps (default to 9600)
- * name recognised: m6840, m6850, m6820, m6821, m6520, m6521, m6522, m6532
+ * name recognised: mc6840, mc6850, mc6820, mc6821, m6520, m6521, m6522, m6532
  * Ex: rom F800 # 2K of rom from F800 to FFFF
  *     mem 0000 8000 # 32 K ram @0000
  *     io E000 E100  # I/O space from E000 to E0FF 
- *     m6840 E020 FIRQ # TIMER @ 0x020, connected to FIRQ
- *     m6850 E000 IRQ 19200 # ACIA @ 0xe000, connected to IRQ, 19200 bps
+ *     mc6840 E020 FIRQ # TIMER @ 0x020, connected to FIRQ
+ *     mc6850 E000 IRQ 19200 # ACIA @ 0xe000, connected to IRQ, 19200 bps
  *     m6522 E040 # VIA @ 0xe040, interrupt line not connected
 */
 
@@ -71,14 +71,22 @@ struct Device *devices = NULL;
 void showdev() {
   struct Device *dev = devices;
   char *itxt;
+  int i;
+  
   while( dev != NULL) {
 
-	printf ("%s @ 0x%04X (interrupt: %c) ", dev->devname, dev->type, dev->addr, dev->interrupt);
+	switch (dev->interrupt){
+	case 'I': itxt = "IRQ"; break;
+	  case 'F': itxt = "FIRQ"; break;
+	  case 'N': itxt = "NMI"; break;
+  	  default : itxt = "not connected"; break;
+	}
+	printf ("%s @ 0x%04X (interrupt: %s) ", dev->devname, dev->addr, itxt);
 	
     switch (dev->type) {
-	  case M6850: m6850_reg( dev); break;
-	  case M6840: m6840_reg( dev); break;
-	  case M6820: m6820_reg( dev); break;
+	  case MC6850: mc6850_reg( dev); break;
+	  case MC6840: mc6840_reg( dev); break;
+	  case MC6820: mc6820_reg( dev); break;
 	  case R6522: r6522_reg( dev); break;
 	  case R6532: r6532_reg( dev); break;
 	  default: break;
@@ -119,10 +127,10 @@ void get_config( uid_t uid) {
     n = strlen( pw->pw_dir);
 	filename = mmalloc( n + 16);
 	strcpy( filename, pw->pw_dir);
-	strcpy( filename + n, "/.sim6809.ini");
+	strcpy( filename + n, "/.simc6809.ini");
 	if( (fconf = fopen( filename, "r")) == NULL) {
 	  free( filename);
-	  fconf = fopen( ".sim6809.ini", "r");
+	  fconf = fopen( ".simc6809.ini", "r");
 	}
   }
 
@@ -157,24 +165,24 @@ void get_config( uid_t uid) {
 	  } else if (strcmp( keyword, "IO") == 0) {
 		io_low = param1;
 		io_high = param2;
-	  } else if (strcmp( keyword, "M6840") == 0)
-		m6840_init( keyword, param1, int_line);
-	  else if (strcmp( keyword, "M6850") == 0) {
+	  } else if (strcmp( keyword, "MC6840") == 0)
+		mc6840_init( keyword, param1, int_line);
+	  else if (strcmp( keyword, "MC6850") == 0) {
 		while (isalpha( *strptr2))
 		  strptr2++;
 		if (more_params( &strptr2))
 		  speed = strtol( strptr2, tail, 10);
 		else
 		  speed = 9600;
-		m6850_init( keyword, param1, int_line, speed);
-	  } else if (strcmp( keyword, "M6820") == 0)
-		m6820_init( keyword, param1, int_line);
-	  else if (strcmp( keyword, "M6821") == 0)
-		m6820_init( keyword, param1, int_line);
+		mc6850_init( keyword, param1, int_line, speed);
+	  } else if (strcmp( keyword, "MC6820") == 0)
+		mc6820_init( keyword, param1, int_line);
+	  else if (strcmp( keyword, "MC6821") == 0)
+		mc6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6520") == 0)
-		m6820_init( keyword, param1, int_line);
+		mc6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6521") == 0)
-		m6820_init( keyword, param1, int_line);
+		mc6820_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6522") == 0)
 		r6522_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6532") == 0)
@@ -203,9 +211,9 @@ void device_run() {
   dev = devices;
   while (dev != NULL) {
     switch (dev->type) {
-	  case M6850: m6850_run( dev); break;
-	  case M6840: m6840_run( dev); break;
-	  case M6820: m6820_run( dev); break;
+	  case MC6850: mc6850_run( dev); break;
+	  case MC6840: mc6840_run( dev); break;
+	  case MC6820: mc6820_run( dev); break;
 	  case R6522: r6522_run( dev); break;
 	  case R6532: r6532_run( dev); break;
 	  default: break;
@@ -236,9 +244,9 @@ tt_u8 read_device(tt_u16 adr)
 	return 0;
   }
   switch (dev->type) {
-    case M6850: return m6850_read( dev, adr);
-    case M6840: return m6840_read( dev, adr);
-    case M6820: return m6820_read( dev, adr);
+    case MC6850: return mc6850_read( dev, adr);
+    case MC6840: return mc6840_read( dev, adr);
+    case MC6820: return mc6820_read( dev, adr);
     case R6522: return r6522_read( dev, adr);
     case R6532: return r6532_read( dev, adr);
   }
@@ -253,9 +261,9 @@ extern void write_device(tt_u16 adr, tt_u8 val)
 	return;
   }
   switch (dev->type) {
-    case M6850: m6850_write( dev, adr, val);return; 
-    case M6840: m6840_write( dev, adr, val);return; 
-    case M6820: m6820_write( dev, adr, val);return; 
+    case MC6850: mc6850_write( dev, adr, val);return; 
+    case MC6840: mc6840_write( dev, adr, val);return; 
+    case MC6820: mc6820_write( dev, adr, val);return; 
     case R6522: r6522_write( dev, adr, val);return; 
     case R6532: r6532_write( dev, adr, val);return; 
   }

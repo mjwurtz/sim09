@@ -1,5 +1,5 @@
 /* vim: set noexpandtab ai ts=4 sw=4 tw=4:
-   m6840.c -- emulation of TIMER MC6840 Motorola
+   mc6840.c -- emulation of Motorola MC6840 Timer
    Copyright (C) 2021 Michel J Wurtz
 
    This program is free software; you can redistribute it and/or modify
@@ -74,19 +74,19 @@ struct Timer {
 */
 
 // Timer initialisation after reset (soft or hard)
-void m6840_reset( struct Device *dev) {
+void mc6840_reset( struct Device *dev) {
 // @TODO
 }
 
 // Timer creation
-void m6840_init( char* devname, int adr, char int_line) {
+void mc6840_init( char* devname, int adr, char int_line) {
 	struct Device *new;
 	struct Timer *timer;
 
 	// Create a device and allocate space for data
 	new = mmalloc( sizeof( struct Device));
 	strcpy( new->devname, "MC6840");
-	new->type = M6840;
+	new->type = MC6840;
 	new->addr = adr;
 	new->end = adr+8;
 	new->interrupt = int_line;
@@ -94,10 +94,10 @@ void m6840_init( char* devname, int adr, char int_line) {
 	new->registers = timer;
 	new->next = devices;
 	devices = new;
-	m6840_reset( new);
+	mc6840_reset( new);
 }
 
-void m6840_run( struct Device *dev) {
+void mc6840_run( struct Device *dev) {
 	// call this every time around the loop
 	int i;
 	char buf;
@@ -119,7 +119,7 @@ void m6840_run( struct Device *dev) {
 }
 
 // handle reads from TIMER registers
-uint8_t m6840_read( struct Device *dev, tt_u16 reg) {
+uint8_t mc6840_read( struct Device *dev, tt_u16 reg) {
   struct Timer *timer;
   timer = dev->registers;
 	switch (reg & 0x07) {   // not fully mapped
@@ -149,7 +149,7 @@ uint8_t m6840_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to TIMER registers
-void m6840_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void mc6840_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   struct Timer *timer;
   timer = dev->registers;
 	switch (reg & 0x07) {   // not fully mapped
@@ -165,7 +165,7 @@ void m6840_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 	}
 }
 
-void m6840_reg( struct Device *dev) {
+void mc6840_reg( struct Device *dev) {
   struct Timer *timer;
   timer = dev->registers;
   printf( "\n       Timer 1 - CR1:%02X, TIMER:%02X, LATCH1:%02X,",

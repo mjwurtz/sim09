@@ -40,23 +40,23 @@ extern void device_run();
 extern tt_u8 read_device(tt_u16 adr);
 extern void write_device(tt_u16 adr, tt_u8 val);
 
-extern void m6850_init( char* devname, int adr, char int_line, int speed);
-extern void m6850_run( struct Device *dev);
-extern tt_u8 m6850_read( struct Device *dev, tt_u16 adr);
-extern void m6850_write( struct Device *dev, tt_u16 adr, tt_u8 val);
-extern void m6850_reg( struct Device *dev);
+extern void mc6820_init( char* devname, int adr, char int_line);
+extern void mc6820_run( struct Device *dev);
+extern tt_u8 mc6820_read( struct Device *dev, tt_u16 adr);
+extern void mc6820_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern void mc6820_reg( struct Device *dev);
 
-extern void m6840_init( char* devname, int adr, char int_line);
-extern void m6840_run( struct Device *dev);
-extern tt_u8 m6840_read( struct Device *dev, tt_u16 adr);
-extern void m6840_write( struct Device *dev, tt_u16 adr, tt_u8 val);
-extern void m6840_reg( struct Device *dev);
+extern void mc6840_init( char* devname, int adr, char int_line);
+extern void mc6840_run( struct Device *dev);
+extern tt_u8 mc6840_read( struct Device *dev, tt_u16 adr);
+extern void mc6840_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern void mc6840_reg( struct Device *dev);
 
-extern void m6820_init( char* devname, int adr, char int_line);
-extern void m6820_run( struct Device *dev);
-extern tt_u8 m6820_read( struct Device *dev, tt_u16 adr);
-extern void m6820_write( struct Device *dev, tt_u16 adr, tt_u8 val);
-extern void m6820_reg( struct Device *dev);
+extern void mc6850_init( char* devname, int adr, char int_line, int speed);
+extern void mc6850_run( struct Device *dev);
+extern tt_u8 mc6850_read( struct Device *dev, tt_u16 adr);
+extern void mc6850_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern void mc6850_reg( struct Device *dev);
 
 extern void r6522_init( char* devname, int adr, char int_line);
 extern void r6522_run( struct Device *dev);
@@ -70,11 +70,26 @@ extern tt_u8 r6532_read( struct Device *dev, tt_u16 adr);
 extern void r6532_write( struct Device *dev, tt_u16 adr, tt_u8 val);
 extern void r6532_reg( struct Device *dev);
 
-// Main peripherals kown, other can be added
-#define M6820 0	// <=> M6821, R6520, R6521
-#define M6840 1
-#define M6850 2
+extern void fd1795_init( char* devname, int adr, char int_line);
+extern void fd1795_run( struct Device *dev);
+extern tt_u8 fd1795_read( struct Device *dev, tt_u16 adr);
+extern void fd1795_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern void fd1795_reg( struct Device *dev);
 
-#define R6522 5
-#define R6532 6
+// Interface adapters kown, other can be added
+// Motorola :
+#define MC6820 0	// PIA <=> MC6821, R6520, R6521
+#define MC6840 1	// TIMER
+#define MC6850 2	// ACIA
 
+// ACIA_CLOCK should be -1 for simulate delay in processor cycles
+// and is computed in function of speed in bps
+#define ACIA_CLOCK 0 // No wait for I/O, use 1 processor cycle
+// #define ACIA_CLOCK -1
+
+// Rockwell :
+#define R6522 4		// VIA (Versatile Interface adapter : I/O + timer)
+#define R6532 5		// RIOT (RAM, I/O, TIMER)
+
+// Western Digital
+#define FD1795 8	// Floppy disk controler

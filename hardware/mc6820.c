@@ -1,5 +1,6 @@
 /* vim: set noexpandtab ai ts=4 sw=4 tw=4:
-   m6820.c -- emulation of PIA Motorola MC6820, MC6821 and Rockwell R6520, R6521
+   mc6820.c -- emulation of Motorola MC6820 PIA and compatible devices
+   like Motorola MC6821, Rockwell R6520 and R6521
    Copyright (C) 2021 Michel J Wurtz
 
    This program is free software; you can redistribute it and/or modify
@@ -60,7 +61,7 @@ struct Pia {
 */
 
 // Initialisation at reset
-void m6820_reset( struct Device *dev) {
+void mc6820_reset( struct Device *dev) {
 	struct Pia *pia;
 	
 	pia = dev->registers;
@@ -80,14 +81,14 @@ void m6820_reset( struct Device *dev) {
 }
 
 // Creation of PIA
-void m6820_init( char* name, int adr, char int_line) {
+void mc6820_init( char* name, int adr, char int_line) {
 	struct Device *new;
 	struct Pia *pia;
 
 	// Create a device and allocate space for data
 	new = mmalloc( sizeof( struct Device));
 	strcpy( new->devname, name);
-	new->type = M6820;
+	new->type = MC6820;
 	new->addr = adr;
 	new->end = adr+4;
 	new->interrupt = int_line;
@@ -95,10 +96,10 @@ void m6820_init( char* name, int adr, char int_line) {
 	new->registers = pia;
 	new->next = devices;
 	devices = new;
-	m6820_reset( new);
+	mc6820_reset( new);
 }
 
-void m6820_run( struct Device *dev) {
+void mc6820_run( struct Device *dev) {
 // Call this every time around the loop
 // Used for generating pulse on CA2 or CB2
 // Pulse width is too large (next instruction exec time)
@@ -118,7 +119,7 @@ void m6820_run( struct Device *dev) {
 }
 
 // handle reads from PIA registers
-uint8_t m6820_read( struct Device *dev, tt_u16 reg) {
+uint8_t mc6820_read( struct Device *dev, tt_u16 reg) {
   struct Pia *pia;
   pia = dev->registers;
   switch( reg & 0x03) {
@@ -140,7 +141,7 @@ uint8_t m6820_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to PIA registers
-void m6820_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void mc6820_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   struct Pia *pia;
   pia = dev->registers;
   switch( reg & 0x03) {
@@ -158,9 +159,10 @@ void m6820_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 	  	pia->setca2 = 1;
 	  return;
 	case 0x02 :
-	  if (pia->crb & 0x02)
+	  if (pia->crb & 0x02) {
 		pia->orb = val & pia->ddrb;
-	  else
+		pia->pibb = val; // port B can read output latch
+	  } else
 		pia->ddrb = val;
 	  return;
 	case 0x03 :
@@ -173,7 +175,7 @@ void m6820_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   }
 }
 
-void m6820_reg( struct Device *dev) {
+void mc6820_reg( struct Device *dev) {
   struct Pia *pia;
   pia = dev->registers;
   printf( "\n           CRA:%02X, DDRA:%02X, ORA:%02X, PIBA:%02X, CA2:%02X",

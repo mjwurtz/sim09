@@ -1,5 +1,5 @@
 /* vim: set noexpandtab ai ts=4 sw=4 tw=4:
-   m6850.c -- emulation of ACIA MC6850 Motorola
+   mc6850.c -- emulation of Motorola MC6850 ACIA
    Copyright (C) 2021 Michel J Wurtz
 
    This program is free software; you can redistribute it and/or modify
@@ -62,14 +62,14 @@ static FILE *acia_hardware;
    RTS, CTS and DCD are not used, with the latter two held grounded
 */
 
-void m6850_init( char* devname, int adr, char int_line, int speed) {
+void mc6850_init( char* devname, int adr, char int_line, int speed) {
 	struct Device *new;
 	struct Acia *acia;
 
 	// Create a device and allocate space for data
 	new = mmalloc( sizeof( struct Device));
 	strcpy( new->devname, "MC6850");
-	new->type = M6850;
+	new->type = MC6850;
 	new->addr = adr;
 	new->end = adr+2;
 	new->interrupt = int_line;
@@ -77,10 +77,11 @@ void m6850_init( char* devname, int adr, char int_line, int speed) {
 	new->registers = acia;
 	new->next = devices;
 	devices = new;
+
 	// Nb of cycles between characters function of speed in bps
 	acia->acia_cycles = (int)((1e7/(float)(speed))+0.5);
 	acia->acia_clock = 0;
-	
+acia->acia_clock = 0;	
 	// configure a pseudo terminal and print its name on the console
 	char *slavename;
 
@@ -138,11 +139,16 @@ void m6850_init( char* devname, int adr, char int_line, int speed) {
 
 //	printf( "ACIA OK\n");
 	char *s1 = "+-----------------------------------------+\r\n";
-	char *s2 = "| sim6809 v0.1 - Emulated MC6850 ACIA I/O |\r\n";
+	char *s2 = "| simc6809 v0.1 - Emulated MC6850 ACIA I/O |\r\n";
 	char *s3 = "+-----------------------------------------+\r\n\n";
 	write( pts, s1, strlen( s1));
 	write( pts, s2, strlen( s2));
 	write( pts, s3, strlen( s3));
+
+char buf;
+	while (read( pts, &buf, 1) > 0)
+		putchar( buf);
+	putchar( '\n');
 }
 
 void acia_destroy() {
@@ -150,7 +156,7 @@ void acia_destroy() {
 	close(pts);
 }
 
-void m6850_run( struct Device *dev) {
+void mc6850_run( struct Device *dev) {
 	// call this every time around the loop
 	int i;
 	char buf;
@@ -197,7 +203,7 @@ void m6850_run( struct Device *dev) {
 }
 
 // handle reads from ACIA registers
-uint8_t m6850_read( struct Device *dev, tt_u16 reg) {
+uint8_t mc6850_read( struct Device *dev, tt_u16 reg) {
   struct Acia *acia;
   acia = dev->registers;
 	switch (reg & 0x01) {   // not fully mapped
@@ -212,7 +218,7 @@ uint8_t m6850_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to ACIA registers
-void m6850_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void mc6850_write( struct Device *dev, tt_u16 reg, uint8_t val) {
   struct Acia *acia;
   acia = dev->registers;
 	switch (reg & 0x01) {   // not fully mapped CR0->CR4 ignored
@@ -227,14 +233,18 @@ void m6850_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 	}
 }
 
-void m6850_reg( struct Device *dev) {
+void mc6850_reg( struct Device *dev) {
   struct Acia *acia;
-  char tdr;
+  char rdr, tdr;
   acia = dev->registers;
+  if (isprint( acia->rdr))
+  	rdr = acia->rdr;
+  else
+	rdr = '.';
   if (isprint( acia->tdr))
   	tdr = acia->tdr;
   else
 	tdr = '.';
   printf( "CR:%02X, SR:%02X, RDR:'%c' (Ox%02X), TDR:'%c' (Ox%02X), cycles=%d/%d\n",
-  		acia->cr, acia->sr, acia->rdr, acia->rdr, tdr, acia->tdr, acia->acia_clock, cycles);
+  		acia->cr, acia->sr, rdr, acia->rdr, tdr, acia->tdr, acia->acia_clock, cycles);
 }

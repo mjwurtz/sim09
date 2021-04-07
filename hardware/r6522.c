@@ -1,5 +1,6 @@
 /* vim: set noexpandtab ai ts=4 sw=4 tw=4:
-   r6522.c -- emulation of VIA Rockwell R6522
+   r6522.c -- emulation of Rockwell R6522 Versatile Interface Adapter
+   (VIA) : I/O + Timer
    Copyright (C) 2021 Michel J Wurtz
 
    This program is free software; you can redistribute it and/or modify
@@ -34,7 +35,7 @@
 #include "../emu/emu6809.h"
 #include "hardware.h"
 
-struct Via6522 {
+struct Via {
 	uint8_t orb;
 	uint8_t irb;
 	uint8_t ora;
@@ -67,7 +68,7 @@ struct Via6522 {
 
 // Initialisation at reset
 void r6522_reset( struct Device *dev) {
-	struct Via6522 *via;
+	struct Via *via;
 	
 	via = dev->registers;
 	via->orb = 0;
@@ -93,7 +94,7 @@ void r6522_reset( struct Device *dev) {
 // Creation of PIA
 void r6522_init( char* name, int adr, char int_line) {
 	struct Device *new;
-	struct Via6522 *via;
+	struct Via *via;
 
 	// Create a device and allocate space for data
 	new = mmalloc( sizeof( struct Device));
@@ -102,7 +103,7 @@ void r6522_init( char* name, int adr, char int_line) {
 	new->addr = adr;
 	new->end = adr+16;
 	new->interrupt = int_line;
-	via = mmalloc( sizeof( struct Via6522));
+	via = mmalloc( sizeof( struct Via));
 	new->registers = via;
 	new->next = devices;
 	devices = new;
@@ -113,13 +114,13 @@ void r6522_run( struct Device *dev) {
 // Call this every time around the loop
 // Used for generating pulse on CA2 or CB2
 // Pulse width is too large (next instruction exec time)
-  struct Via6522 *via;
+  struct Via *via;
   via = dev->registers;
 }
 
 // handle reads from PIA registers
 uint8_t r6522_read( struct Device *dev, tt_u16 reg) {
-  struct Via6522 *via;
+  struct Via *via;
   via = dev->registers;
   switch( reg & 0x0f) {
 	case 0x00 :
@@ -158,7 +159,7 @@ uint8_t r6522_read( struct Device *dev, tt_u16 reg) {
 
 // handle writes to PIA registers
 void r6522_write( struct Device *dev, tt_u16 reg, uint8_t val) {
-  struct Via6522 *via;
+  struct Via *via;
   via = dev->registers;
   switch( reg & 0x0f) {
 	case 0x00 :
@@ -211,7 +212,7 @@ void r6522_write( struct Device *dev, tt_u16 reg, uint8_t val) {
 }
 
 void r6522_reg( struct Device *dev) {
-  struct Via6522 *via;
+  struct Via *via;
   via = dev->registers;
   printf( "\n           PCR:%02X, DDRA:%02X, ORA:%02X, IRA:%02X, CA2:%02X",
 		via->pcr, via->ddra, via->ora, via->ira, via->ca2);

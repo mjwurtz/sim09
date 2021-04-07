@@ -1,5 +1,5 @@
 /* vim: set noexpandtab ai ts=4 sw=4 tw=4:
-   r6532.c -- emulation of VIA Rockwell R6532
+   r6532.c -- emulation of Rockwell R6532 RAM-I/O-TIMER (RIOT)
    Copyright (C) 2021 Michel J Wurtz
 
    This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 #include "../emu/emu6809.h"
 #include "hardware.h"
 
-struct Via6532 {
+struct Riot {
 	uint8_t ram[128];
 	uint8_t dra;
 	uint8_t ddra;
@@ -48,20 +48,20 @@ struct Via6532 {
 };
 
 /*
-	Rockwell 6532 VIA contains two 8 bits parallel ports (PIA),
+	Rockwell 6532 RIOT contains two 8 bits parallel ports,
 	2 counter/timers ans some serial I/O lines
 */
 
 // Initialisation at reset
 void r6532_reset( struct Device *dev) {
-	struct Via6532 *via;
+	struct Riot *riot;
 	
 }
 
 // Creation of PIA
 void r6532_init( char* name, int adr, char int_line) {
 	struct Device *new;
-	struct Via6532 *via;
+	struct Riot *riot;
 
 	// Create a device and allocate space for data
 	new = mmalloc( sizeof( struct Device));
@@ -70,8 +70,8 @@ void r6532_init( char* name, int adr, char int_line) {
 	new->addr = adr;
 	new->end = adr+160;
 	new->interrupt = int_line;
-	via = mmalloc( sizeof( struct Via6532));
-	new->registers = via;
+	riot = mmalloc( sizeof( struct Riot));
+	new->registers = riot;
 	new->next = devices;
 	devices = new;
 	r6532_reset( new);
@@ -81,78 +81,78 @@ void r6532_run( struct Device *dev) {
 // Call this every time around the loop
 // Used for generating pulse on CA2 or CB2
 // Pulse width is too large (next instruction exec time)
-  struct Via6532 *via;
-  via = dev->registers;
+  struct Riot *riot;
+  riot = dev->registers;
 }
 
-// handle reads from VIA registers
+// handle reads from RIOT registers
 uint8_t r6532_read( struct Device *dev, tt_u16 reg) {
-  struct Via6532 *via;
-  via = dev->registers;
+  struct Riot *riot;
+  riot = dev->registers;
   if (reg & 0x80 == 0)	// RAM
-	return via->ram[reg & 0x7F];
+	return riot->ram[reg & 0x7F];
 
   if (reg & 0x04) {		// TIMER
   	if (reg & 0x01)
-	  return via->ifr;
+	  return riot->ifr;
 	else {
 	  if (reg & 0x08)
-		via->settings |= 0x08;
+		riot->settings |= 0x08;
 	  else
-		via->settings &= 0xf7;
-	  return via->timer;
+		riot->settings &= 0xf7;
+	  return riot->timer;
 	}
   } else {				// PIA
 	switch (reg & 0x03) {
-	  case 0: return via->dra;
-	  case 1: return via->ddra;
-	  case 2: return via->drb;
-	  case 3: return via->ddrb;
+	  case 0: return riot->dra;
+	  case 1: return riot->ddra;
+	  case 2: return riot->drb;
+	  case 3: return riot->ddrb;
 	}
   }
 }
 
 // handle writes to PIA registers
 void r6532_write( struct Device *dev, tt_u16 reg, uint8_t val) {
-  struct Via6532 *via;
-  via = dev->registers;
+  struct Riot *riot;
+  riot = dev->registers;
   if (reg & 0x80 == 0) {
-	via->ram[reg & 0x7F] = val;
+	riot->ram[reg & 0x7F] = val;
 	return;
   }
 
   if (reg & 0x04) {
 	if (reg & 0x10) {	// TIMER
-		via->settings &= 0xf4;
-		via->settings |= (reg & 0x0b);
-		via->timer = val;
+		riot->settings &= 0xf4;
+		riot->settings |= (reg & 0x0b);
+		riot->timer = val;
 	} else {			// EDC
 	  if (reg & 0x02)
-	  	via->settings |= 0x80;
+	  	riot->settings |= 0x80;
 	  else
-		via->settings &= 0x7f;
-	  via->edc = val;
+		riot->settings &= 0x7f;
+	  riot->edc = val;
 	}
   } else {				// PIA
 	switch (reg & 0x03) {
-	  case 0: via->dra = val; return;
-	  case 1: via->ddra = val; return;
-	  case 2: via->drb = val; return;
-	  case 3: via->ddrb = val; return;
+	  case 0: riot->dra = val; return;
+	  case 1: riot->ddra = val; return;
+	  case 2: riot->drb = val; return;
+	  case 3: riot->ddrb = val; return;
 	}
   }
 }
 
 void r6532_reg( struct Device *dev) {
-  struct Via6532 *via;
+  struct Riot *riot;
   int tdiv[] = {1, 8, 64, 1024};
   char iset[12];
-  via = dev->registers;
-  if (via->settings & 0x80)
+  riot = dev->registers;
+  if (riot->settings & 0x80)
 	strcpy( iset, "timer");
   else
 	*iset = 0;
-  if (via->settings & 0x80)
+  if (riot->settings & 0x80)
 	if (*iset)
 	  strcat(iset, ", PA7");
 	else
@@ -161,7 +161,7 @@ void r6532_reg( struct Device *dev) {
 	strcpy( iset, "none");
 
   printf( "\n           DRA:%02X, DDRA:%02X, DRB:%02X, DDRB:%02X",
-		via->dra, via->ddra, via->drb, via->ddrb);
+		riot->dra, riot->ddra, riot->drb, riot->ddrb);
   printf( "\n           TIMER:%02X [/%dT], IFR:%02X, EDC:%02X, interrupt : %s\n",
-		via->timer, tdiv[via->settings & 0x03], via->ifr, via->edc, iset);
+		riot->timer, tdiv[riot->settings & 0x03], riot->ifr, riot->edc, iset);
 }
