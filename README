@@ -1,3 +1,8 @@
+This version of sim6809 use a definition file for some interface adapters :
+ACIA, PIA and TIMER, with the possibility to add other devices.
+Actualy the ACIA works well. 
+
+Original Readme :
 This is version 0.1 beta of sim6809.
 
 sim6809 is a 6809 simulator, which contains a debugger, and support for
