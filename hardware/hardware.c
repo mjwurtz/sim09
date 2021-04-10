@@ -88,9 +88,10 @@ void showdev() {
 	  case MC6850: mc6850_reg( dev); break;
 	  case MC6840: mc6840_reg( dev); break;
 	  case MC6820: mc6820_reg( dev); break;
-	  case R6522: r6522_reg( dev); break;
-	  case R6532: r6532_reg( dev); break;
-	  default: break;
+	  case R6522:  r6522_reg( dev); break;
+	  case R6532:  r6532_reg( dev); break;
+	  case FD1795: fd1795_reg( dev); break;
+	  default:     printf( "length=%04X\n", dev->end-dev->addr); break;
 	}
 	dev = dev->next;
   }
@@ -143,18 +144,19 @@ void get_config( uid_t uid) {
 	  if (*line == '#')
 	    continue;
 	  strptr = line;
-	  while (*strptr) {
-	    *strptr = toupper( *strptr);
-		strptr++;
-	  }
 	  strptr = line;
 	  keyword = readstr( &strptr);
+	  strptr2 = keyword;
+	  while (*strptr2) {
+	    *strptr2 = toupper( *strptr2);
+		strptr2++;
+	  }
 	  if (more_params( &strptr))
 	    param1 = readhex( &strptr);
 	  else
 	    param1 = -1;
 	  if (more_params( &strptr)) {
-	  	int_line = *strptr;
+	  	int_line = toupper(*strptr);
 		strptr2 = strptr;
 	    param2 = readhex( &strptr);
 	  } else {
@@ -191,6 +193,10 @@ void get_config( uid_t uid) {
 		r6522_init( keyword, param1, int_line);
 	  else if (strcmp( keyword, "R6532") == 0)
 		r6532_init( keyword, param1, int_line);
+	  else if (strcmp( keyword, "FD1795") == 0)
+		fd1795_init( keyword, param1, int_line, readstr( &strptr2));
+	  else if (strcmp( keyword, "FAKE") == 0)
+		fake_init( keyword, param1, param2);
 	  else
 	    printf( "Unrecognised device '%s' in '%s'\n", keyword, filename);
 
@@ -254,8 +260,10 @@ tt_u8 read_device(tt_u16 adr)
     case MC6850: return mc6850_read( dev, adr);
     case MC6840: return mc6840_read( dev, adr);
     case MC6820: return mc6820_read( dev, adr);
-    case R6522: return r6522_read( dev, adr);
-    case R6532: return r6532_read( dev, adr);
+    case R6522:  return r6522_read( dev, adr);
+    case R6532:  return r6532_read( dev, adr);
+    case FD1795: return fd1795_read( dev, adr);
+    case FAKE:   return fake_read( dev, adr);
   }
 }
 
@@ -271,7 +279,9 @@ extern void write_device(tt_u16 adr, tt_u8 val)
     case MC6850: mc6850_write( dev, adr, val);return; 
     case MC6840: mc6840_write( dev, adr, val);return; 
     case MC6820: mc6820_write( dev, adr, val);return; 
-    case R6522: r6522_write( dev, adr, val);return; 
-    case R6532: r6532_write( dev, adr, val);return; 
+    case R6522:  r6522_write( dev, adr, val);return; 
+    case R6532:  r6532_write( dev, adr, val);return; 
+    case FD1795: fd1795_write( dev, adr, val);return; 
+    case FAKE:   fake_write( dev, adr, val);return; 
   }
 }

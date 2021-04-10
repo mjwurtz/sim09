@@ -70,11 +70,15 @@ extern tt_u8 r6532_read( struct Device *dev, tt_u16 adr);
 extern void r6532_write( struct Device *dev, tt_u16 adr, tt_u8 val);
 extern void r6532_reg( struct Device *dev);
 
-extern void fd1795_init( char* devname, int adr, char int_line);
+extern void fd1795_init( char* devname, int adr, char int_line, char *dskname);
 extern void fd1795_run( struct Device *dev);
 extern tt_u8 fd1795_read( struct Device *dev, tt_u16 adr);
 extern void fd1795_write( struct Device *dev, tt_u16 adr, tt_u8 val);
 extern void fd1795_reg( struct Device *dev);
+
+extern void fake_init( char* devname, int adr, int end);
+extern tt_u8 fake_read( struct Device *dev, tt_u16 adr);
+extern void fake_write( struct Device *dev, tt_u16 adr, tt_u8 val);
 
 // Interface adapters kown, other can be added
 // Motorola :
@@ -88,3 +92,6 @@ extern void fd1795_reg( struct Device *dev);
 
 // Western Digital
 #define FD1795 8	// Floppy disk controler
+
+// Dummy device - emulates memory
+#define FAKE 0x10

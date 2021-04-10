@@ -108,10 +108,10 @@ am_sim6809_OBJECTS = console.$(OBJEXT) dis6809.$(OBJEXT) \
 	intel.$(OBJEXT) motorola.$(OBJEXT) raw.$(OBJEXT) \
 	../hardware/hardware.$(OBJEXT) ../hardware/mc6850.$(OBJEXT) \
 	../hardware/mc6840.$(OBJEXT) ../hardware/mc6820.$(OBJEXT) \
-	../hardware/r6522.$(OBJEXT) ../hardware/r6532.$(OBJEXT)
+	../hardware/r6522.$(OBJEXT) ../hardware/r6532.$(OBJEXT) \
+	../hardware/fd1795.$(OBJEXT) ../hardware/fake.$(OBJEXT)
 sim6809_OBJECTS = $(am_sim6809_OBJECTS)
-am__DEPENDENCIES_1 =
-sim6809_DEPENDENCIES = $(am__DEPENDENCIES_1)
+sim6809_DEPENDENCIES =
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -127,7 +127,9 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ../hardware/$(DEPDIR)/hardware.Po \
+am__depfiles_remade = ../hardware/$(DEPDIR)/fake.Po \
+	../hardware/$(DEPDIR)/fd1795.Po \
+	../hardware/$(DEPDIR)/hardware.Po \
 	../hardware/$(DEPDIR)/mc6820.Po \
 	../hardware/$(DEPDIR)/mc6840.Po \
 	../hardware/$(DEPDIR)/mc6850.Po ../hardware/$(DEPDIR)/r6522.Po \
@@ -277,8 +279,8 @@ top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
-sim6809_LDADD = $(ALSA_LIBS) $(UTIL_LIBS)
-sim6809_SOURCES = console.c dis6809.c emu6809.c inst6809.c int6809.c memory.c misc.c miscutils.c intel.c motorola.c raw.c ../hardware/hardware.c ../hardware/mc6850.c ../hardware/mc6840.c ../hardware/mc6820.c ../hardware/r6522.c ../hardware/r6532.c
+sim6809_LDADD = $(UTIL_LIBS)
+sim6809_SOURCES = console.c dis6809.c emu6809.c inst6809.c int6809.c memory.c misc.c miscutils.c intel.c motorola.c raw.c ../hardware/hardware.c ../hardware/mc6850.c ../hardware/mc6840.c ../hardware/mc6820.c ../hardware/r6522.c ../hardware/r6532.c ../hardware/fd1795.c ../hardware/fake.c
 all: all-am
 
 .SUFFIXES:
@@ -372,6 +374,10 @@ clean-binPROGRAMS:
 	../hardware/$(DEPDIR)/$(am__dirstamp)
 ../hardware/r6532.$(OBJEXT): ../hardware/$(am__dirstamp) \
 	../hardware/$(DEPDIR)/$(am__dirstamp)
+../hardware/fd1795.$(OBJEXT): ../hardware/$(am__dirstamp) \
+	../hardware/$(DEPDIR)/$(am__dirstamp)
+../hardware/fake.$(OBJEXT): ../hardware/$(am__dirstamp) \
+	../hardware/$(DEPDIR)/$(am__dirstamp)
 
 sim6809$(EXEEXT): $(sim6809_OBJECTS) $(sim6809_DEPENDENCIES) $(EXTRA_sim6809_DEPENDENCIES) 
 	@rm -f sim6809$(EXEEXT)
@@ -384,6 +390,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ../hardware/$(DEPDIR)/fake.Po # am--include-marker
+include ../hardware/$(DEPDIR)/fd1795.Po # am--include-marker
 include ../hardware/$(DEPDIR)/hardware.Po # am--include-marker
 include ../hardware/$(DEPDIR)/mc6820.Po # am--include-marker
 include ../hardware/$(DEPDIR)/mc6840.Po # am--include-marker
@@ -553,7 +561,9 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ../hardware/$(DEPDIR)/hardware.Po
+		-rm -f ../hardware/$(DEPDIR)/fake.Po
+	-rm -f ../hardware/$(DEPDIR)/fd1795.Po
+	-rm -f ../hardware/$(DEPDIR)/hardware.Po
 	-rm -f ../hardware/$(DEPDIR)/mc6820.Po
 	-rm -f ../hardware/$(DEPDIR)/mc6840.Po
 	-rm -f ../hardware/$(DEPDIR)/mc6850.Po
@@ -615,7 +625,9 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ../hardware/$(DEPDIR)/hardware.Po
+		-rm -f ../hardware/$(DEPDIR)/fake.Po
+	-rm -f ../hardware/$(DEPDIR)/fd1795.Po
+	-rm -f ../hardware/$(DEPDIR)/hardware.Po
 	-rm -f ../hardware/$(DEPDIR)/mc6820.Po
 	-rm -f ../hardware/$(DEPDIR)/mc6840.Po
 	-rm -f ../hardware/$(DEPDIR)/mc6850.Po
