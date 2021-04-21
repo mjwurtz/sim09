@@ -22,20 +22,6 @@
 #include <stdint.h>
 
 /*
- * Define here your 8 bits types
- *
- */
-typedef unsigned char tt_u8;
-typedef signed char tt_s8;
-
-/*
- * Define here your 16 bits types 
- *
- */
-typedef unsigned short tt_u16;
-typedef signed short tt_s16;
-
-/*
  * define to keep a PC history in debugger
  */
 #define PC_HISTORY

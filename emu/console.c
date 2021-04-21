@@ -65,7 +65,7 @@ int m6809_system(void)
 {
   static char input[256];
   char *p = input;
-  tt_u8 c;
+  uint8_t c;
 
   switch (ra) {
   case 0 :
@@ -134,7 +134,7 @@ int execute()
   return r;
 }
 
-void execute_addr(tt_u16 addr)
+void execute_addr(uint16_t addr)
 {
   int n;
 
@@ -158,9 +158,9 @@ void ignore_ws(char **c)
 	(*c)++;
 }
 
-tt_u16 readhex(char **c)
+uint16_t readhex(char **c)
 {
-  tt_u16 val = 0;
+  uint16_t val = 0;
   char nc;
 
   ignore_ws(c);
@@ -225,8 +225,8 @@ char next_char(char **c)
 void console_command()
 {
   static char input[80], copy[80];
-  char *strptr;
-  tt_u16 memadr, start, end;
+  char *strptr, *fname;
+  uint16_t memadr, start, end;
   long n;
   int i, r;
   int regon = 0;
@@ -247,7 +247,7 @@ void console_command()
 	switch (next_char(&strptr)) {
 	case 'c' :
 	  for (n = 0; n < 0x10000; n++)
-	set_memb((tt_u16)n, 0);
+	set_memb((uint16_t)n, 0);
 	  printf("Memory cleared\n");
 	  break;
 	case 'd' :
@@ -260,9 +260,9 @@ void console_command()
 	  } else 
 		start = end = memadr;
 	  
-	  for(n = start; n <= end && n < 0x10000; n += dis6809((tt_u16)n, stdout));
+	  for(n = start; n <= end && n < 0x10000; n += dis6809((uint16_t)n, stdout));
 
-	  memadr = (tt_u16)n;
+	  memadr = (uint16_t)n;
 	  break;
 	case 'f' :
 	  if (more_params(&strptr)) {
@@ -295,14 +295,12 @@ void console_command()
 	  break;
 	case 'h' : case '?' :
 	  printf("     HELP for the 6809 simulator debugger\n\n");
-	  printf("   b file [start]  : load raw binary <file> at address <start>\n");
 	  printf("   c               : clear memory\n");
 	  printf("   d [start] [end] : disassemble memory from <start> to <end>\n");
 	  printf("   f adr           : step forward until PC = <adr>\n");
 	  printf("   g [adr]         : start execution at current address or <adr>\n");
 	  printf("   h, ?            : show this help page\n");
-	  printf("   i file          : load Intel Hex binary <file>\n");
-	  printf("   l file(s)       : load Motororal s19 binary <file>\n");
+	  printf("   l file(s)       : load binary file : .s19, .hex or .bin (at adress <start>)\n");
 	  printf("   m [start] [end] : dump memory from <start> to <end>\n");
 	  printf("   n [n]           : next [n] instruction(s)\n");
 	  printf("   p adr           : set PC to <adr>\n");
@@ -317,25 +315,21 @@ void console_command()
 	  printf("   w               : toggle show devices\n");
 	  printf("   y [0]           : show number of 6809 cycles [or set it to 0]\n");
 	  break;
-	case 'i' :
-	  if (more_params(&strptr))
-		load_intelhex(readstr(&strptr));
-	  else
-		printf("Syntax Error. Type 'h' to show help.\n");
-	  break;
 	case 'l' :
-	  if (more_params(&strptr))
-		load_motos1(readstr(&strptr));
-	  else
-		printf("Syntax Error. Type 'h' to show help.\n");
-	  break;
-	case 'b' :
 	  if (more_params(&strptr)) {
-		char *fname = readstr(&strptr);
-		if (more_params(&strptr))
-		  load_raw(fname, readstr(&strptr));
+		fname = readstr(&strptr);
+		if (strstr( fname, ".s19"))
+		  load_motos1(readstr(&strptr));
+		else if (strstr( fname, ".hex"))
+		  load_intelhex(readstr(&strptr));
+		else if (strstr( fname, ".bin"))
+		  if (more_params(&strptr))
+			load_raw(fname, readstr(&strptr));
+		  else
+			load_raw(fname, "0");
 		else
-		  load_raw(fname, "0");
+		  printf ("File extension unknown. Type 'h' to show help.\n");
+		break;
 	  } else
 		printf("Syntax Error. Type 'h' to show help.\n");
 	  break;
@@ -354,7 +348,7 @@ void console_command()
 			printf("%02X ", get_memb(n++));
 		  n -= 16;
 		  for (i = 1; i <=16; i++) {
-		  tt_u8 v;
+		  uint8_t v;
 
 		  v = get_memb(n++);
 		  if (v >= 0x20 && v <= 0x7e)
@@ -443,9 +437,9 @@ void console_command()
 
 void usage( char *cmd) {
 	printf("Usage: %s [-h] => this help\n", cmd);
-	printf("       %s -b <file> [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
-	printf("       %s -m [<file> [...]] => load 0..n motorola .s19 file(s)\n", cmd);
-	printf("       %s -i [<file> [...]] => load 0..n intel .hex file(s)\n", cmd);
+	printf("       %s <file>.bin [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
+	printf("       %s <file>.s19 [...] => load 1..n motorola .s19 file(s)\n", cmd);
+	printf("       %s <file>.hex [...] => load 1..n intel .hex file(s)\n", cmd);
 	exit(0);
 }
 
@@ -453,31 +447,23 @@ void parse_cmdline(int argc, char **argv)
 {
   char *cmd = argv[0];
   char *param = *++argv;
-  if (--argc == 0 || param[0] != '-')
+  if (--argc == 0 || strncmp( param, "-h", 2) == 0)
 	usage( cmd);
 
-  argc--;
-  switch (param[1]) {
-	case 'i' :
-  	  while (argc-- > 0)
-		load_intelhex(*++argv);
-	  break;
-	case 'm' :
-  	  while (argc-- > 0)
-		load_motos1(*++argv);
-	  break;
-	case 'b' :
-	  if (argc == 2)
-		load_raw( argv[1], argv[2]);
-	  else
-		load_raw( argv[1], "0");
-	  break;
-	case 'h' :
-	  usage( cmd);
-	  break;
-	default :
-	  printf( "Invalid parameter !\n");
-	  usage( cmd);
+  if (strstr( param, ".s19"))
+  	while (argc-- > 0)
+	  load_motos1(*argv++);
+  else if (strstr( param, ".hex"))
+  	while (argc-- > 0)
+	  load_intelhex(*argv++);
+  else if (strstr( param, ".bin"))
+	if (argc == 2)
+	  load_raw( param, argv[1]);
+	else
+	  load_raw( param, "0");
+  else {
+	printf( "Invalid parameter !\n");
+	usage( cmd);
   }
 }
 

@@ -37,48 +37,48 @@ extern struct Device {
 
 extern void showdev();
 extern void device_run();
-extern tt_u8 read_device(tt_u16 adr);
-extern void write_device(tt_u16 adr, tt_u8 val);
+extern uint8_t read_device(uint16_t adr);
+extern void write_device(uint16_t adr, uint8_t val);
 
 extern void mc6820_init( char* devname, int adr, char int_line);
 extern void mc6820_run( struct Device *dev);
-extern tt_u8 mc6820_read( struct Device *dev, tt_u16 adr);
-extern void mc6820_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t mc6820_read( struct Device *dev, uint16_t adr);
+extern void mc6820_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void mc6820_reg( struct Device *dev);
 
 extern void mc6840_init( char* devname, int adr, char int_line);
 extern void mc6840_run( struct Device *dev);
-extern tt_u8 mc6840_read( struct Device *dev, tt_u16 adr);
-extern void mc6840_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t mc6840_read( struct Device *dev, uint16_t adr);
+extern void mc6840_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void mc6840_reg( struct Device *dev);
 
 extern void mc6850_init( char* devname, int adr, char int_line, int speed);
 extern void mc6850_run( struct Device *dev);
-extern tt_u8 mc6850_read( struct Device *dev, tt_u16 adr);
-extern void mc6850_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t mc6850_read( struct Device *dev, uint16_t adr);
+extern void mc6850_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void mc6850_reg( struct Device *dev);
 
 extern void r6522_init( char* devname, int adr, char int_line);
 extern void r6522_run( struct Device *dev);
-extern tt_u8 r6522_read( struct Device *dev, tt_u16 adr);
-extern void r6522_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t r6522_read( struct Device *dev, uint16_t adr);
+extern void r6522_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void r6522_reg( struct Device *dev);
 
 extern void r6532_init( char* devname, int adr, char int_line);
 extern void r6532_run( struct Device *dev);
-extern tt_u8 r6532_read( struct Device *dev, tt_u16 adr);
-extern void r6532_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t r6532_read( struct Device *dev, uint16_t adr);
+extern void r6532_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void r6532_reg( struct Device *dev);
 
 extern void fd1795_init( char* devname, int adr, char int_line, char *dskname);
 extern void fd1795_run( struct Device *dev);
-extern tt_u8 fd1795_read( struct Device *dev, tt_u16 adr);
-extern void fd1795_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t fd1795_read( struct Device *dev, uint16_t adr);
+extern void fd1795_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void fd1795_reg( struct Device *dev);
 
 extern void fake_init( char* devname, int adr, int end);
-extern tt_u8 fake_read( struct Device *dev, tt_u16 adr);
-extern void fake_write( struct Device *dev, tt_u16 adr, tt_u8 val);
+extern uint8_t fake_read( struct Device *dev, uint16_t adr);
+extern void fake_write( struct Device *dev, uint16_t adr, uint8_t val);
 
 // Interface adapters kown, other can be added
 // Motorola :

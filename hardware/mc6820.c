@@ -119,7 +119,7 @@ void mc6820_run( struct Device *dev) {
 }
 
 // handle reads from PIA registers
-uint8_t mc6820_read( struct Device *dev, tt_u16 reg) {
+uint8_t mc6820_read( struct Device *dev, uint16_t reg) {
   struct Pia *pia;
   pia = dev->registers;
   switch( reg & 0x03) {
@@ -141,7 +141,7 @@ uint8_t mc6820_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to PIA registers
-void mc6820_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void mc6820_write( struct Device *dev, uint16_t reg, uint8_t val) {
   struct Pia *pia;
   pia = dev->registers;
   switch( reg & 0x03) {

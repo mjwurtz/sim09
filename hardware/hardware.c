@@ -236,7 +236,7 @@ void device_run() {
 }
 
 // Search a device from its address
-struct Device *look_dev( tt_u16 adr)
+struct Device *look_dev( uint16_t adr)
 {
   struct Device *dev;
   dev = devices;
@@ -249,7 +249,7 @@ struct Device *look_dev( tt_u16 adr)
 }
 
 // reading a device
-tt_u8 read_device(tt_u16 adr)
+uint8_t read_device(uint16_t adr)
 {
   struct Device *dev;
   if ((dev = look_dev( adr)) == NULL) {
@@ -268,7 +268,7 @@ tt_u8 read_device(tt_u16 adr)
 }
 
 // writing a device
-extern void write_device(tt_u16 adr, tt_u8 val)
+extern void write_device(uint16_t adr, uint8_t val)
 {
   struct Device *dev;
   if ((dev = look_dev( adr)) == NULL) {

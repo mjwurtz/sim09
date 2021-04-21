@@ -60,7 +60,7 @@ static int read_line(void)
 {
   char *strptr = linebuf;
   int len, i;
-  tt_u16 addr;
+  uint16_t addr;
   unsigned char type;
 
   if (*strptr++ != ':') {

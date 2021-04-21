@@ -25,16 +25,16 @@
 
 #include "../hardware/hardware.h"
 
-tt_u8 *ramdata;    /* 64 kb of ram */
+uint8_t *ramdata;    /* 64 kb of ram */
 
 int memory_init(void)
 {
-  ramdata = (tt_u8 *)mmalloc(0x10000);
+  ramdata = (uint8_t *)mmalloc(0x10000);
 
   return 1;
 }
 
-tt_u8 get_memb(tt_u16 adr)
+uint8_t get_memb(uint16_t adr)
 {
   // not hardware
   if (adr < io_low || adr >= io_high) {
@@ -49,12 +49,12 @@ tt_u8 get_memb(tt_u16 adr)
   }
 }
 
-tt_u16 get_memw(tt_u16 adr)
+uint16_t get_memw(uint16_t adr)
 {
-  return (tt_u16)get_memb(adr) << 8 | (tt_u16)get_memb(adr + 1);
+  return (uint16_t)get_memb(adr) << 8 | (uint16_t)get_memb(adr + 1);
 }
 
-void set_memb(tt_u16 adr, tt_u8 val)
+void set_memb(uint16_t adr, uint8_t val)
 {
 // Protecting some memory space
   if (loading) {
@@ -80,10 +80,10 @@ void set_memb(tt_u16 adr, tt_u8 val)
 	write_device( adr, val);
 }
 
-void set_memw(tt_u16 adr, tt_u16 val)
+void set_memw(uint16_t adr, uint16_t val)
 {
-  set_memb(adr, (tt_u8)(val >> 8));
-  set_memb(adr + 1, (tt_u8)val);
+  set_memb(adr, (uint8_t)(val >> 8));
+  set_memb(adr + 1, (uint8_t)val);
 }
 
 

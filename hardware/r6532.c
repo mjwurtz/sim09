@@ -86,7 +86,7 @@ void r6532_run( struct Device *dev) {
 }
 
 // handle reads from RIOT registers
-uint8_t r6532_read( struct Device *dev, tt_u16 reg) {
+uint8_t r6532_read( struct Device *dev, uint16_t reg) {
   struct Riot *riot;
   riot = dev->registers;
   if (reg & 0x80 == 0)	// RAM
@@ -113,7 +113,7 @@ uint8_t r6532_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to PIA registers
-void r6532_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void r6532_write( struct Device *dev, uint16_t reg, uint8_t val) {
   struct Riot *riot;
   riot = dev->registers;
   if (reg & 0x80 == 0) {

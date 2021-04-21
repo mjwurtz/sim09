@@ -50,8 +50,9 @@
 
 // Avoid using 100%cpu while waiting for input (select unusable
 // since it returns allways 0 after testing a read on pts...
+// To be avoided since even with ACIA_CLOCK 0, the system is very slow
 
-#define SLOWDOWN
+// #define SLOWDOWN
 
 #define ACIA_CR 0
 #define ACIA_SR 0
@@ -250,7 +251,7 @@ void mc6850_run( struct Device *dev) {
 }
 
 // handle reads from ACIA registers
-uint8_t mc6850_read( struct Device *dev, tt_u16 reg) {
+uint8_t mc6850_read( struct Device *dev, uint16_t reg) {
   struct Acia *acia;
   acia = dev->registers;
 	switch (reg & 0x01) {   // not fully mapped
@@ -265,7 +266,7 @@ uint8_t mc6850_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to ACIA registers
-void mc6850_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void mc6850_write( struct Device *dev, uint16_t reg, uint8_t val) {
   struct Acia *acia;
   acia = dev->registers;
 	switch (reg & 0x01) {   // not fully mapped CR0->CR4 ignored

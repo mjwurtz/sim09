@@ -119,7 +119,7 @@ void mc6840_run( struct Device *dev) {
 }
 
 // handle reads from TIMER registers
-uint8_t mc6840_read( struct Device *dev, tt_u16 reg) {
+uint8_t mc6840_read( struct Device *dev, uint16_t reg) {
   struct Timer *timer;
   timer = dev->registers;
 	switch (reg & 0x07) {   // not fully mapped
@@ -149,7 +149,7 @@ uint8_t mc6840_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to TIMER registers
-void mc6840_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void mc6840_write( struct Device *dev, uint16_t reg, uint8_t val) {
   struct Timer *timer;
   timer = dev->registers;
 	switch (reg & 0x07) {   // not fully mapped

@@ -119,7 +119,7 @@ void r6522_run( struct Device *dev) {
 }
 
 // handle reads from PIA registers
-uint8_t r6522_read( struct Device *dev, tt_u16 reg) {
+uint8_t r6522_read( struct Device *dev, uint16_t reg) {
   struct Via *via;
   via = dev->registers;
   switch( reg & 0x0f) {
@@ -158,7 +158,7 @@ uint8_t r6522_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to PIA registers
-void r6522_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void r6522_write( struct Device *dev, uint16_t reg, uint8_t val) {
   struct Via *via;
   via = dev->registers;
   switch( reg & 0x0f) {

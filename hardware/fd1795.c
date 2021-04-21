@@ -114,7 +114,7 @@ void fd1795_init( char* name, int adr, char int_line, char *dskname) {
 }
 
 // handle reads from Floppy Controler registers
-uint8_t fd1795_read( struct Device *dev, tt_u16 reg) {
+uint8_t fd1795_read( struct Device *dev, uint16_t reg) {
   struct Fdc *fdc;
   uint8_t buf;
   fdc = dev->registers;
@@ -135,7 +135,7 @@ uint8_t fd1795_read( struct Device *dev, tt_u16 reg) {
 }
 
 // handle writes to Floppy Controler Registers
-void fd1795_write( struct Device *dev, tt_u16 reg, uint8_t val) {
+void fd1795_write( struct Device *dev, uint16_t reg, uint8_t val) {
   struct Fdc *fdc;
   uint8_t cmd;
 
