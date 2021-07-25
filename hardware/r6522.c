@@ -92,7 +92,7 @@ void r6522_reset( struct Device *dev) {
 }
 
 // Creation of PIA
-void r6522_init( char* name, int adr, char int_line) {
+void r6522_init( char* name, uint16_t adr, char int_line) {
 	struct Device *new;
 	struct Via *via;
 

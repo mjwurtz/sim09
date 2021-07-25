@@ -69,7 +69,7 @@ void fd1795_reset( struct Device *dev) {
 // - guessing number of tracks/sectors from file size may fail...
 
 // Creation of Floppy Controler
-void fd1795_init( char* name, int adr, char int_line, char *dskname) {
+void fd1795_init( char* name, uint16_t adr, char int_line, char *dskname) {
 	struct Device *new;
 	struct Fdc *fdc;
 	struct stat dsk_stat;

@@ -59,7 +59,7 @@ void r6532_reset( struct Device *dev) {
 }
 
 // Creation of PIA
-void r6532_init( char* name, int adr, char int_line) {
+void r6532_init( char* name, uint16_t adr, char int_line) {
 	struct Device *new;
 	struct Riot *riot;
 

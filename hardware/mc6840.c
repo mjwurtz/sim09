@@ -79,7 +79,7 @@ void mc6840_reset( struct Device *dev) {
 }
 
 // Timer creation
-void mc6840_init( char* devname, int adr, char int_line) {
+void mc6840_init( char* devname, uint16_t adr, char int_line) {
 	struct Device *new;
 	struct Timer *timer;
 

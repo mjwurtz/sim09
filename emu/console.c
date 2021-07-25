@@ -300,7 +300,7 @@ void console_command()
 	  printf("   f adr           : step forward until PC = <adr>\n");
 	  printf("   g [adr]         : start execution at current address or <adr>\n");
 	  printf("   h, ?            : show this help page\n");
-	  printf("   l file(s)       : load binary file : .s19, .hex or .bin (at adress <start>)\n");
+	  printf("   l file(s)       : load binary file : .s19, .hex or .b[in] (at adress <start>)\n");
 	  printf("   m [start] [end] : dump memory from <start> to <end>\n");
 	  printf("   n [n]           : next [n] instruction(s)\n");
 	  printf("   p adr           : set PC to <adr>\n");
@@ -317,21 +317,25 @@ void console_command()
 	  break;
 	case 'l' :
 	  if (more_params(&strptr)) {
-		fname = readstr(&strptr);
-		if (strstr( fname, ".s19"))
-		  load_motos1(readstr(&strptr));
-		else if (strstr( fname, ".hex"))
-		  load_intelhex(readstr(&strptr));
-		else if (strstr( fname, ".bin"))
-		  if (more_params(&strptr))
-			load_raw(fname, readstr(&strptr));
+printf("taille : %ld - '%s'\n", strlen (strptr), strptr);
+		fname = mmalloc( strlen( strptr));
+		strcpy( fname, readstr(&strptr));
+		if (strncmp( strchr( fname, '.'), ".s19", 4) == 0)
+		  load_motos1( readstr( &strptr));
+		else if (strncmp( strchr( fname, '.'), ".hex", 4) == 0)
+		  load_intelhex( readstr( &strptr));
+		else if (strncmp( strchr( fname, '.'), ".bin", 4) == 0
+				|| strncmp( strchr( fname, '.'), ".b", 2) == 0)
+		  if (more_params( &strptr))
+			load_raw( fname, readstr( &strptr));
 		  else
-			load_raw(fname, "0");
+			load_raw( fname, "0");
 		else
 		  printf ("File extension unknown. Type 'h' to show help.\n");
 		break;
 	  } else
 		printf("Syntax Error. Type 'h' to show help.\n");
+	  free( fname);
 	  break;
 	case 'm' :
 	  if (more_params(&strptr)) {
@@ -437,7 +441,7 @@ void console_command()
 
 void usage( char *cmd) {
 	printf("Usage: %s [-h] => this help\n", cmd);
-	printf("       %s <file>.bin [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
+	printf("       %s <file>.b[in] [hexpos] => load raw binary file at hexpos (default: end at $FFFF)\n", cmd);
 	printf("       %s <file>.s19 [...] => load 1..n motorola .s19 file(s)\n", cmd);
 	printf("       %s <file>.hex [...] => load 1..n intel .hex file(s)\n", cmd);
 	exit(0);
@@ -450,13 +454,14 @@ void parse_cmdline(int argc, char **argv)
   if (--argc == 0 || strncmp( param, "-h", 2) == 0)
 	usage( cmd);
 
-  if (strstr( param, ".s19"))
+  if (strncmp( strchr( param, '.'), ".s19", 4) == 0)
   	while (argc-- > 0)
-	  load_motos1(*argv++);
-  else if (strstr( param, ".hex"))
+	  load_motos1( *argv++);
+  else if (strncmp( strchr( param, '.'), ".hex", 4) == 0)
   	while (argc-- > 0)
 	  load_intelhex(*argv++);
-  else if (strstr( param, ".bin"))
+  else if (strncmp( strchr( param, '.'), ".bin", 4) == 0
+		 || strncmp( strchr( param, '.'), ".b", 2) == 0)
 	if (argc == 2)
 	  load_raw( param, argv[1]);
 	else

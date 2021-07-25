@@ -17,66 +17,65 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-extern int mem_low ;	// base address of physical memory emulated
-extern int mem_high ;	// upper limit of physical memory emulated
-extern int io_low ;		// start of memory used by I/O devices
-extern int io_high ;	// upper limit of memory used by I/O devices
-extern int rom ;		// base address of rom (allways on top of memory)
+extern uint16_t mem_low ;	// base address of physical memory emulated
+extern uint16_t mem_high ;	// upper limit of physical memory emulated
+extern uint16_t rom ;		// base address of rom (allways on top of memory)
 
 extern int loading ;
 
 extern struct Device {
 	char devname[16];
 	int type;
-	int addr;
-	int end;
+	uint16_t addr;
+	uint16_t end;
 	char interrupt;
 	void *registers;
 	struct Device *next;
 	} *devices;
 
+extern struct Device *look_dev( uint16_t adr);
 extern void showdev();
 extern void device_run();
 extern uint8_t read_device(uint16_t adr);
 extern void write_device(uint16_t adr, uint8_t val);
 
-extern void mc6820_init( char* devname, int adr, char int_line);
+extern void mc6820_init( char* devname, uint16_t adr, char int_line);
 extern void mc6820_run( struct Device *dev);
 extern uint8_t mc6820_read( struct Device *dev, uint16_t adr);
 extern void mc6820_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void mc6820_reg( struct Device *dev);
 
-extern void mc6840_init( char* devname, int adr, char int_line);
+extern void mc6840_init( char* devname, uint16_t adr, char int_line);
 extern void mc6840_run( struct Device *dev);
 extern uint8_t mc6840_read( struct Device *dev, uint16_t adr);
 extern void mc6840_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void mc6840_reg( struct Device *dev);
 
-extern void mc6850_init( char* devname, int adr, char int_line, int speed);
+extern void mc6850_init( char* devname, uint16_t adr, char int_line, int32_t speed);
 extern void mc6850_run( struct Device *dev);
 extern uint8_t mc6850_read( struct Device *dev, uint16_t adr);
 extern void mc6850_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void mc6850_reg( struct Device *dev);
 
-extern void r6522_init( char* devname, int adr, char int_line);
+extern void r6522_init( char* devname, uint16_t adr, char int_line);
 extern void r6522_run( struct Device *dev);
 extern uint8_t r6522_read( struct Device *dev, uint16_t adr);
 extern void r6522_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void r6522_reg( struct Device *dev);
 
-extern void r6532_init( char* devname, int adr, char int_line);
+extern void r6532_init( char* devname, uint16_t adr, char int_line);
 extern void r6532_run( struct Device *dev);
 extern uint8_t r6532_read( struct Device *dev, uint16_t adr);
 extern void r6532_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void r6532_reg( struct Device *dev);
 
-extern void fd1795_init( char* devname, int adr, char int_line, char *dskname);
+extern void fd1795_init( char* devname, uint16_t adr, char int_line, char *dskname);
 extern void fd1795_run( struct Device *dev);
 extern uint8_t fd1795_read( struct Device *dev, uint16_t adr);
 extern void fd1795_write( struct Device *dev, uint16_t adr, uint8_t val);
 extern void fd1795_reg( struct Device *dev);
 
-extern void fake_init( char* devname, int adr, int end);
+extern void fake_init( char* devname, uint16_t adr, uint16_t end);
 extern uint8_t fake_read( struct Device *dev, uint16_t adr);
 extern void fake_write( struct Device *dev, uint16_t adr, uint8_t val);
 

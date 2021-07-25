@@ -81,7 +81,7 @@ void mc6820_reset( struct Device *dev) {
 }
 
 // Creation of PIA
-void mc6820_init( char* name, int adr, char int_line) {
+void mc6820_init( char* name, uint16_t adr, char int_line) {
 	struct Device *new;
 	struct Pia *pia;
 

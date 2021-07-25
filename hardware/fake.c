@@ -31,7 +31,7 @@
 #include "hardware.h"
 
 struct Fake {
-	int size;
+	int32_t size;
 	uint8_t *byte;
 };
 
@@ -52,7 +52,7 @@ void fake_reset( struct Device *dev) {
 }
 
 // Creation of fake device
-void fake_init( char* name, int adr, int end) {
+void fake_init( char* name, uint16_t adr, uint16_t end) {
 	struct Device *new;
 	struct Fake *reg;
 
@@ -61,10 +61,14 @@ void fake_init( char* name, int adr, int end) {
 	strcpy( new->devname, name);
 	new->type = FAKE;
 	new->addr = adr;
-	new->end = adr+4;
+	if (end > adr) 	// end = 0 if not defined
+	  new->end = end;
+	else
+	  new->end = adr+4;
+	printf ("adr = %04X, end = %04X, size = %04X\n", new->addr, new->end, (uint16_t)(new->end - new->addr));
 	reg = mmalloc( sizeof( struct Fake));
 	new->registers = reg;
-	reg->size = end - adr;
+	reg->size = (uint16_t)(new->end - new->addr);
 	reg->byte = mmalloc( sizeof(uint8_t) * reg->size);
 	new->next = devices;
 	devices = new;
@@ -74,7 +78,7 @@ void fake_init( char* name, int adr, int end) {
 // handle reads
 uint8_t fake_read( struct Device *dev, uint16_t adr) {
   struct Fake *reg;
-  int pos;
+  uint16_t pos;
   reg = dev->registers;
   pos = adr - dev->addr;
   return reg->byte[pos];
@@ -83,7 +87,7 @@ uint8_t fake_read( struct Device *dev, uint16_t adr) {
 // handle writes to PIA registers
 void fake_write( struct Device *dev, uint16_t adr, uint8_t val) {
   struct Fake *reg;
-  int pos;
+  uint16_t pos;
   reg = dev->registers;
   pos = adr - dev->addr;
   reg->byte[pos] = val;

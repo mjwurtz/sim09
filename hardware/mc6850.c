@@ -88,7 +88,7 @@ extern int nanosleep( const struct timespec *delay, struct timespec *remain);
 #define SLOWDOWN_DELAY 50 // delay of 50 ns to avoid 100% CPU usage
 #endif
 
-void mc6850_init( char* devname, int adr, char int_line, int speed) {
+void mc6850_init( char* devname, uint16_t adr, char int_line, int32_t speed) {
 	struct Device *new;
 	struct Acia *acia;
 

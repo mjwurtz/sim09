@@ -37,8 +37,8 @@ int memory_init(void)
 uint8_t get_memb(uint16_t adr)
 {
   // not hardware
-  if (adr < io_low || adr >= io_high) {
-    if (adr < mem_low || (adr >= mem_high && adr < rom) || adr > 0xFFFF) {
+  if (look_dev( adr) == NULL) {
+    if (adr < mem_low || (adr >= mem_high && adr < rom)) {
       printf( "read %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
       err6809 = ERR_NO_MEMORY;
       return (0);
@@ -68,7 +68,7 @@ void set_memb(uint16_t adr, uint8_t val)
   }
 
 // managing memory available on simulated hardware
-  if (adr < io_low || adr >= io_high) { // not inside io space ?
+  if (look_dev( adr) == NULL) { // not inside io space ?
     if (adr < mem_low || adr >= mem_high) {
       printf( "write %04X mem_low %04X mem_high %04X, ROM %04X\n", adr, mem_low, mem_high, rom);
       err6809 = ERR_NO_MEMORY;

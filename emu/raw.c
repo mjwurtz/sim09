@@ -32,17 +32,17 @@ void load_raw( char *filename, char *pos)
   FILE *fi;
   int c;
 	
-  printf("loading %s ... ", filename);
+  printf("loading binary file %s ... ", filename);
   fi=fopen(filename,"r");
   if (fi==NULL)
   {
     printf("can't open it, sorry.\n");
-    exit( 1);
+    return;
   }
   fseek( fi, 0L, SEEK_END);
   if( (bin_len = ftell( fi)) < 0) {
-	printf( "File error, exiting.\n");
-	exit( 1);
+	printf( "file error, aborting.\n");
+	return;
   }
   if (pos[0] == '0' && pos[1] == 'x')
 	sscanf( pos, "%lx", &bin_pos);
@@ -53,8 +53,8 @@ void load_raw( char *filename, char *pos)
 	bin_pos = 0x10000 - bin_len;
 
   if( bin_pos + bin_len > 0x10000 || bin_pos < 0) {
-	printf( "Position/length mismatch : 0x%04X/0x%04X, exiting.\n", bin_pos, bin_len);
-	exit( 1);
+	printf( "Position/length mismatch : 0x%04X/0x%04X, aborting.\n", bin_pos, bin_len);
+	return;
   }
 
 // reading and processing file...

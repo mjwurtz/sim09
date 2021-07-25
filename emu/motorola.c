@@ -33,7 +33,7 @@ int load_motos1(char *filename)
   unsigned char value;
   FILE *fi;
 	
-  printf("loading %s ... ", filename);
+  printf("loading motorola file %s ... ", filename);
   fi=fopen(filename,"r");
   if (fi==NULL)
   {
